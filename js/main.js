@@ -40,6 +40,13 @@ function collegaEventiUI() {
     alert('Credenziali GitHub salvate!');
     sincronizzaConGitHub();
   });
+  document.getElementById('btnSettings')?.addEventListener('click', () => {
+    document.getElementById('modalConfig')?.classList.remove('hidden');
+  });
+
+  document.getElementById('btnChiudiConfig')?.addEventListener('click', () => {
+    document.getElementById('modalConfig')?.classList.add('hidden');
+  });
 }
 
 async function sincronizzaConGitHub() {
