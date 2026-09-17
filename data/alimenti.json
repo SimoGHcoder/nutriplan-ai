@@ -49,5 +49,17 @@
     "carboidrati_100g": 74,
     "grassi_100g": 2.2,
     "attivo": true
+  },
+  {
+    "id": "cibo_1789668262828",
+    "nome": "Uova intere",
+    "categoria": "Proteine",
+    "unita_misura": "g",
+    "peso_unita": 100,
+    "calorie_100g": 128,
+    "proteine_100g": 12.4,
+    "carboidrati_100g": 0.1,
+    "grassi_100g": 8.7,
+    "attivo": true
   }
 ]
