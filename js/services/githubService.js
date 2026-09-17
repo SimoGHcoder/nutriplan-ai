@@ -1,6 +1,6 @@
 // js/services/githubService.js
 
-// Repository fisso condiviso
+// Modifica qui il nome del tuo repository se dovesse essere diverso
 const REPO_NAME = "pwa-nutrizionista";
 
 export function getConfigGH() {
@@ -19,10 +19,14 @@ async function getUsernameFromToken(token) {
         'Accept': 'application/vnd.github.v3+json'
       }
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error("Errore verifica token GitHub:", res.status, res.statusText);
+      return null;
+    }
     const data = await res.json();
-    return data.login; // Ritorna il nome utente esatto di GitHub
+    return data.login;
   } catch (e) {
+    console.error("Eccezione durante il recupero dello username GitHub:", e);
     return null;
   }
 }
@@ -43,7 +47,10 @@ export async function caricaFileDaGitHub(pathFile) {
       }
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.warn(`File ${pathFile} non trovato su GitHub (potrebbe essere la prima creazione).`);
+      return null;
+    }
     const data = await res.json();
     const contentDecoded = decodeURIComponent(escape(atob(data.content)));
     return JSON.parse(contentDecoded);
@@ -67,6 +74,7 @@ export async function salvaFileSuGitHub(pathFile, jsonObject, messaggioCommit) {
   const url = `https://api.github.com/repos/${username}/${REPO_NAME}/contents/${pathFile}`;
   let sha = null;
 
+  // 1. Verifica se il file esiste già per ottenere il suo SHA (obbligatorio per aggiornare i file su GitHub)
   try {
     const resGet = await fetch(url, {
       headers: {
@@ -79,9 +87,10 @@ export async function salvaFileSuGitHub(pathFile, jsonObject, messaggioCommit) {
       sha = fileData.sha;
     }
   } catch (e) {
-    // File non esiste, verrà creato
+    console.log(`Il file ${pathFile} non esiste ancora, verrà creato.`);
   }
 
+  // 2. Codifica corretta del contenuto in base64 UTF-8
   const contentString = JSON.stringify(jsonObject, null, 2);
   const contentBase64 = btoa(unescape(encodeURIComponent(contentString)));
 
@@ -89,8 +98,12 @@ export async function salvaFileSuGitHub(pathFile, jsonObject, messaggioCommit) {
     message: messaggioCommit || `Aggiornamento ${pathFile}`,
     content: contentBase64
   };
-  if (sha) bodyData.sha = sha;
+  
+  if (sha) {
+    bodyData.sha = sha;
+  }
 
+  // 3. Invio della richiesta PUT a GitHub
   const resPut = await fetch(url, {
     method: 'PUT',
     headers: {
@@ -103,8 +116,11 @@ export async function salvaFileSuGitHub(pathFile, jsonObject, messaggioCommit) {
 
   if (!resPut.ok) {
     const errJson = await resPut.json();
+    console.error("Risposta errore GitHub API:", errJson);
     throw new Error(errJson.message || 'Errore durante il salvataggio su GitHub');
   }
 
-  return await resPut.json();
+  const resultData = await resPut.json();
+  console.log(`File ${pathFile} salvato con successo su GitHub!`, resultData);
+  return resultData;
 }
