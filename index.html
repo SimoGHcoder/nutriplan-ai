@@ -192,7 +192,7 @@
         <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
           <span>⚙️</span> Impostazioni Sync GitHub
         </h3>
-        <p class="text-xs text-gray-500">Inserisci i dati del tuo repository GitHub per sincronizzare alimenti e profilo su cloud.</p>
+        <p class="text-xs text-gray-500">Configura il token e l'ID profilo per caricare il file utente dedicato (es. utente_simone.json).</p>
         
         <div class="space-y-3">
           <div>
@@ -207,11 +207,16 @@
             <label class="block text-xs font-medium text-gray-700 mb-1">Nome Repository</label>
             <input type="text" id="cfg_repo" placeholder="pwa-nutrizionista" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
           </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">ID Profilo (Nome File Cloud)</label>
+            <input type="text" id="cfg_profilo_id" placeholder="Es. simone" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
+            <p class="text-[10px] text-gray-500 mt-0.5">Verrà usato il file: <code id="lblNomeFilePreview" class="text-emerald-700 font-mono">data/utente_default.json</code></p>
+          </div>
         </div>
 
         <div class="flex justify-end gap-2 pt-2">
           <button id="btnChiudiConfig" class="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition">Annulla</button>
-          <button id="btnSalvaConfig" class="px-4 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition">Salva</button>
+          <button id="btnSalvaConfig" class="px-4 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition">Salva e Sincronizza</button>
         </div>
       </div>
     </div>
