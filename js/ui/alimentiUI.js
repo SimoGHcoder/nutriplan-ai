@@ -4,13 +4,14 @@ let callbackToggleAlimento = null;
 let callbackEditAlimento = null;
 let debounceTimer = null;
 
+// Database di base pulito con esempi misti (uova a pezzi, albume in grammi, salmone a porzione)
 const DATABASE_BASE = [
-  { nome: "Uova intere", categoria: "Proteine", unita: "pz", peso_unita: 60, kcal: 128, prot: 12.4, carbo: 0.1, grassi: 8.7 },
-  { nome: "Albume d'uovo (liquido)", categoria: "Proteine", unita: "g", peso_unita: 100, kcal: 52, prot: 10.9, carbo: 0.7, grassi: 0.2 },
-  { nome: "Trancio di Salmone", categoria: "Proteine", unita: "porzione", peso_unita: 150, kcal: 185, prot: 18.4, carbo: 0.0, grassi: 12.0 },
-  { nome: "Riso Basmati", categoria: "Carboidrati", unita: "g", peso_unita: 100, kcal: 345, prot: 7.0, carbo: 78.0, grassi: 0.6 },
-  { nome: "Petto di pollo", categoria: "Proteine", unita: "g", peso_unita: 100, kcal: 100, prot: 23.3, carbo: 0.0, grassi: 0.8 },
-  { nome: "Olio extravergine d'oliva", categoria: "Grassi", unita: "g", peso_unita: 100, kcal: 899, prot: 0.0, carbo: 0.0, grassi: 99.9 }
+  { nome: "Uova intere", categoria: "Proteine", unita_misura: "pz", peso_unita: 60, calorie_100g: 128, proteine_100g: 12.4, carboidrati_100g: 0.1, grassi_100g: 8.7 },
+  { nome: "Albume d'uovo (liquido)", categoria: "Proteine", unita_misura: "g", peso_unita: 100, calorie_100g: 52, proteine_100g: 10.9, carboidrati_100g: 0.7, grassi_100g: 0.2 },
+  { nome: "Trancio di Salmone", categoria: "Proteine", unita_misura: "porzione", peso_unita: 150, calorie_100g: 185, proteine_100g: 18.4, carboidrati_100g: 0.0, grassi_100g: 12.0 },
+  { nome: "Riso Basmati", categoria: "Carboidrati", unita_misura: "g", peso_unita: 100, calorie_100g: 345, proteine_100g: 7.0, carboidrati_100g: 78.0, grassi_100g: 0.6 },
+  { nome: "Petto di pollo", categoria: "Proteine", unita_misura: "g", peso_unita: 100, calorie_100g: 100, proteine_100g: 23.3, carboidrati_100g: 0.0, grassi_100g: 0.8 },
+  { nome: "Olio extravergine d'oliva", categoria: "Grassi", unita_misura: "g", peso_unita: 100, calorie_100g: 899, proteine_100g: 0.0, carboidrati_100g: 0.0, grassi_100g: 99.9 }
 ];
 
 export function inizializzaAlimentiUI(onToggle, onEdit) {
@@ -19,6 +20,7 @@ export function inizializzaAlimentiUI(onToggle, onEdit) {
 
   document.getElementById('btnChiudiModalAlimento')?.addEventListener('click', chiudiModalAlimento);
 
+  // Gestione visibilità campo "Peso dell'unità" in base alla scelta dell'utente
   const selectUnita = document.getElementById('alim_unita');
   const wrapperPesoUnita = document.getElementById('wrapperPesoUnita');
   if (selectUnita && wrapperPesoUnita) {
@@ -29,12 +31,13 @@ export function inizializzaAlimentiUI(onToggle, onEdit) {
         wrapperPesoUnita.classList.remove('hidden');
         const labelTesto = document.getElementById('labelPesoUnita');
         if (labelTesto) {
-          labelTesto.innerText = e.target.value === 'pz' ? 'Peso medio di 1 pezzo (g)' : 'Peso fisso della confezione/porzione (g)';
+          labelTesto.innerText = e.target.value === 'pz' ? 'Peso medio di 1 pezzo (g)' : 'Peso fisso della porzione/confezione (g)';
         }
       }
     });
   }
 
+  // Listener Autocomplete Open Food Facts + Base Locale
   const inputNome = document.getElementById('alim_nome');
   if (inputNome) {
     inputNome.addEventListener('input', (e) => {
@@ -84,25 +87,17 @@ async function cercaAlimentiGenerale(query) {
 
         if (p.product_name && kcal > 0) {
           if (!risultatiTrovati.some(r => r.nome.toLowerCase() === p.product_name.toLowerCase())) {
-            // Riconoscimento intelligente dell'unità in base al nome del prodotto trovato online
-            let unitaRilevata = 'g';
-            let pesoRilevato = 100;
-            const nomeLower = p.product_name.toLowerCase();
-            
-            if (nomeLower.includes('uova') && !nomeLower.includes('albume')) {
-              unitaRilevata = 'pz';
-              pesoRilevato = 60;
-            }
-
+            // I prodotti da Open Food Facts partono sempre standard in grammi (g). 
+            // Sarai tu eventualmente a cambiarlo in "pz" o "porzione" se lo desideri.
             risultatiTrovati.push({
               nome: p.brands ? `${p.product_name} (${p.brands})` : p.product_name,
               categoria: 'Generico',
-              unita: unitaRilevata,
-              peso_unita: pesoRilevato,
-              kcal: parseFloat(kcal.toFixed(1)),
-              prot: parseFloat(prot.toFixed(1)),
-              carbo: parseFloat(carbo.toFixed(1)),
-              grassi: parseFloat(grassi.toFixed(1)),
+              unita_misura: 'g',
+              peso_unita: 100,
+              calorie_100g: parseFloat(kcal.toFixed(1)),
+              proteine_100g: parseFloat(prot.toFixed(1)),
+              carboidrati_100g: parseFloat(carbo.toFixed(1)),
+              grassi_100g: parseFloat(grassi.toFixed(1)),
               fonte: 'Open Food Facts'
             });
           }
@@ -131,29 +126,30 @@ function mostraBoxSuggerimenti(lista) {
     const div = document.createElement('div');
     div.className = 'p-2.5 hover:bg-emerald-50 cursor-pointer text-xs flex justify-between items-center transition border-b border-gray-50';
     
-    let descUnitaSpiegazione = item.unita === 'pz' ? 'a pezzi (~60g)' : item.unita === 'porzione' ? 'porzione fissa' : 'a grammi (g)';
-
     div.innerHTML = `
       <div>
         <span class="font-semibold text-gray-800 block">${item.nome}</span>
-        <span class="text-[10px] text-gray-400">${item.fonte} • Misura: <strong class="text-emerald-700">${descUnitaSpiegazione}</strong></span>
+        <span class="text-[10px] text-gray-400">${item.fonte}</span>
       </div>
-      <span class="text-gray-600 font-mono text-right">🔥 ${item.kcal} kcal/100g</span>
+      <span class="text-gray-600 font-mono text-right">🔥 ${item.calorie_100g} kcal/100g</span>
     `;
 
     div.addEventListener('click', () => {
       document.getElementById('alim_nome').value = item.nome;
       document.getElementById('alim_categoria').value = item.categoria || 'Generico';
-      document.getElementById('alim_unita').value = item.unita || 'g';
+      document.getElementById('alim_unita').value = item.unita_misura || 'g';
       document.getElementById('alim_peso_unita').value = item.peso_unita || 100;
-      document.getElementById('alim_kcal').value = item.kcal;
-      document.getElementById('alim_prot').value = item.prot;
-      document.getElementById('alim_carbo').value = item.carbo;
-      document.getElementById('alim_grassi').value = item.grassi;
+      document.getElementById('alim_kcal').value = item.calorie_100g;
+      document.getElementById('alim_prot').value = item.proteine_100g;
+      document.getElementById('alim_carbo').value = item.carboidrati_100g;
+      document.getElementById('alim_grassi').value = item.grassi_100g;
 
       const wrapper = document.getElementById('wrapperPesoUnita');
-      if (item.unita === 'g') wrapper.classList.add('hidden');
-      else wrapper.classList.remove('hidden');
+      if ((item.unita_misura || 'g') === 'g') {
+        wrapper.classList.add('hidden');
+      } else {
+        wrapper.classList.remove('hidden');
+      }
 
       nascondiSuggerimenti();
     });
