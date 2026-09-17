@@ -1,6 +1,6 @@
 {
   "profilo": {
-    "eta": 36,
+    "eta": 35,
     "sesso": "m",
     "altezza_cm": 171,
     "peso_kg": 76,
@@ -12,6 +12,11 @@
       "data": "2026-09-17",
       "peso_kg": 75,
       "note": "Inizio percorso"
+    },
+    {
+      "data": "2026-09-17",
+      "peso_kg": 76,
+      "note": "Aggiornamento profilo"
     },
     {
       "data": "2026-09-17",
