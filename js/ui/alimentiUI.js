@@ -4,7 +4,7 @@ let callbackToggleAlimento = null;
 let callbackEditAlimento = null;
 let debounceTimer = null;
 
-// Database di base pulito con esempi misti (uova a pezzi, albume in grammi, salmone a porzione)
+// Database di base con esempi di peso variabile e peso fisso
 const DATABASE_BASE = [
   { nome: "Uova intere", categoria: "Proteine", unita_misura: "pz", peso_unita: 60, calorie_100g: 128, proteine_100g: 12.4, carboidrati_100g: 0.1, grassi_100g: 8.7 },
   { nome: "Albume d'uovo (liquido)", categoria: "Proteine", unita_misura: "g", peso_unita: 100, calorie_100g: 52, proteine_100g: 10.9, carboidrati_100g: 0.7, grassi_100g: 0.2 },
@@ -20,7 +20,7 @@ export function inizializzaAlimentiUI(onToggle, onEdit) {
 
   document.getElementById('btnChiudiModalAlimento')?.addEventListener('click', chiudiModalAlimento);
 
-  // Gestione visibilità campo "Peso dell'unità" in base alla scelta dell'utente
+  // Gestione visibilità e etichetta del campo "Peso dell'unità" in base alla scelta dell'utente
   const selectUnita = document.getElementById('alim_unita');
   const wrapperPesoUnita = document.getElementById('wrapperPesoUnita');
   if (selectUnita && wrapperPesoUnita) {
@@ -37,11 +37,25 @@ export function inizializzaAlimentiUI(onToggle, onEdit) {
     });
   }
 
-  // Listener Autocomplete Open Food Facts + Base Locale
+  // Listener Autocomplete Open Food Facts + Base Locale con controllo intelligente sulle uova
   const inputNome = document.getElementById('alim_nome');
   if (inputNome) {
     inputNome.addEventListener('input', (e) => {
       const testo = e.target.value;
+      
+      // Controllo di default: se l'utente sta scrivendo "uova", impostiamo 'pz' di default, altrimenti 'g'
+      const selectUnita = document.getElementById('alim_unita');
+      const wrapperPesoUnita = document.getElementById('wrapperPesoUnita');
+      if (selectUnita && wrapperPesoUnita) {
+        if (testo.toLowerCase().includes('uova') && !selectUnita.dataset.userModified) {
+          selectUnita.value = 'pz';
+          document.getElementById('alim_peso_unita').value = '60';
+          wrapperPesoUnita.classList.remove('hidden');
+          const labelTesto = document.getElementById('labelPesoUnita');
+          if (labelTesto) labelTesto.innerText = 'Peso medio di 1 pezzo (g)';
+        }
+      }
+
       clearTimeout(debounceTimer);
       if (!testo || testo.trim().length < 2) {
         nascondiSuggerimenti();
@@ -50,6 +64,11 @@ export function inizializzaAlimentiUI(onToggle, onEdit) {
       debounceTimer = setTimeout(() => {
         cercaAlimentiGenerale(testo.trim());
       }, 300);
+    });
+
+    // Tracciamo se l'utente ha modificato manualmente l'unità di misura
+    selectUnita?.addEventListener('change', () => {
+      selectUnita.dataset.userModified = 'true';
     });
 
     document.addEventListener('click', (e) => {
@@ -87,13 +106,13 @@ async function cercaAlimentiGenerale(query) {
 
         if (p.product_name && kcal > 0) {
           if (!risultatiTrovati.some(r => r.nome.toLowerCase() === p.product_name.toLowerCase())) {
-            // I prodotti da Open Food Facts partono sempre standard in grammi (g). 
-            // Sarai tu eventualmente a cambiarlo in "pz" o "porzione" se lo desideri.
+            // Selezioniamo 'pz' se il nome contiene uova, altrimenti default a 'g' (peso variabile)
+            const isUova = p.product_name.toLowerCase().includes('uov');
             risultatiTrovati.push({
               nome: p.brands ? `${p.product_name} (${p.brands})` : p.product_name,
               categoria: 'Generico',
-              unita_misura: 'g',
-              peso_unita: 100,
+              unita_misura: isUova ? 'pz' : 'g',
+              peso_unita: isUova ? 60 : 100,
               calorie_100g: parseFloat(kcal.toFixed(1)),
               proteine_100g: parseFloat(prot.toFixed(1)),
               carboidrati_100g: parseFloat(carbo.toFixed(1)),
@@ -137,8 +156,12 @@ function mostraBoxSuggerimenti(lista) {
     div.addEventListener('click', () => {
       document.getElementById('alim_nome').value = item.nome;
       document.getElementById('alim_categoria').value = item.categoria || 'Generico';
-      document.getElementById('alim_unita').value = item.unita_misura || 'g';
-      document.getElementById('alim_peso_unita').value = item.peso_unita || 100;
+      const selectUnita = document.getElementById('alim_unita');
+      if (selectUnita) {
+        selectUnita.value = item.unita_misura || 'g';
+        selectUnita.dataset.userModified = 'true';
+      }
+      document.getElementById('alim_peso_unita').value = item.peso_unita || 60;
       document.getElementById('alim_kcal').value = item.calorie_100g;
       document.getElementById('alim_prot').value = item.proteine_100g;
       document.getElementById('alim_carbo').value = item.carboidrati_100g;
@@ -149,6 +172,10 @@ function mostraBoxSuggerimenti(lista) {
         wrapper.classList.add('hidden');
       } else {
         wrapper.classList.remove('hidden');
+        const labelTesto = document.getElementById('labelPesoUnita');
+        if (labelTesto) {
+          labelTesto.innerText = item.unita_misura === 'pz' ? 'Peso medio di 1 pezzo (g)' : 'Peso fisso della porzione/confezione (g)';
+        }
       }
 
       nascondiSuggerimenti();
@@ -184,7 +211,7 @@ export function renderListaAlimenti(alimentiData, filtro = '') {
   cibiFiltrati.forEach(a => {
     const isAttivo = a.attivo !== false;
     const unitaMisura = a.unita_misura || 'g';
-    const descUnita = unitaMisura === 'pz' ? `Pezzo (~${a.peso_unita || 0}g)` : unitaMisura === 'porzione' ? `Porzione (${a.peso_unita || 0}g)` : 'Grammi (g)';
+    const descUnita = unitaMisura === 'pz' ? `Peso Fisso - Pezzo (~${a.peso_unita || 0}g)` : unitaMisura === 'porzione' ? `Peso Fisso - Porzione (${a.peso_unita || 0}g)` : 'Peso Variabile (g)';
 
     const card = document.createElement('div');
     card.className = `p-3 flex items-center justify-between gap-2 transition-all ${isAttivo ? 'opacity-100' : 'opacity-50 bg-red-50/50'}`;
@@ -220,6 +247,7 @@ export function renderListaAlimenti(alimentiData, filtro = '') {
 export function apriModalAlimento(alim = null) {
   const modal = document.getElementById('modalAlimento');
   const titolo = document.getElementById('modalAlimentoTitolo');
+  const selectUnita = document.getElementById('alim_unita');
   if (!modal) return;
 
   nascondiSuggerimenti();
@@ -232,8 +260,8 @@ export function apriModalAlimento(alim = null) {
     document.getElementById('editAlimentoId').value = alim.id || '';
     document.getElementById('alim_nome').value = alim.nome || '';
     document.getElementById('alim_categoria').value = alim.categoria || 'Proteine';
-    document.getElementById('alim_unita').value = alim.unita_misura || 'g';
-    document.getElementById('alim_peso_unita').value = alim.peso_unita || 100;
+    if (selectUnita) selectUnita.value = alim.unita_misura || 'g';
+    document.getElementById('alim_peso_unita').value = alim.peso_unita || 60;
     document.getElementById('alim_kcal').value = alim.calorie_100g ?? '';
     document.getElementById('alim_prot').value = alim.proteine_100g ?? '';
     document.getElementById('alim_carbo').value = alim.carboidrati_100g ?? '';
@@ -246,7 +274,13 @@ export function apriModalAlimento(alim = null) {
     document.getElementById('editAlimentoId').value = '';
     document.getElementById('alim_nome').value = '';
     document.getElementById('alim_categoria').value = 'Proteine';
-    document.getElementById('alim_unita').value = 'g';
+    
+    // Per un nuovo alimento generico partiamo di default con peso variabile in grammi ('g'), 
+    // a meno che l'utente non scelga altrimenti o scriva "uova".
+    if (selectUnita) {
+      selectUnita.value = 'g';
+      delete selectUnita.dataset.userModified;
+    }
     document.getElementById('alim_peso_unita').value = '60';
     document.getElementById('alim_kcal').value = '';
     document.getElementById('alim_prot').value = '';
