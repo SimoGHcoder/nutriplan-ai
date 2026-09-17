@@ -1,5 +1,7 @@
 # 🥗 PWA Nutrizionista
 
+https://simoghcoder.github.io/pwa-nutrizionista/
+
 Una Progressive Web App (PWA) moderna, leggera e orientata alla privacy per la gestione personalizzata dei piani alimentari, del fabbisogno calorico avanzato e del database degli alimenti, con sincronizzazione diretta su GitHub.
 
 ## ✨ Caratteristiche Principali
