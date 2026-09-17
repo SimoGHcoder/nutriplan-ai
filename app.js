@@ -1,278 +1,282 @@
-// GESTIONE MODALE IMPOSTAZIONI API
-function openConfigModal() {
-  const modal = document.getElementById('configModal');
-  if (modal) {
-    caricaConfigInModal();
-    modal.classList.remove('hidden');
-  } else {
-    console.error("Modale #configModal non trovata nel DOM.");
-  }
-}
-
-function closeConfigModal() {
-  const modal = document.getElementById('configModal');
-  if (modal) {
-    modal.classList.add('hidden');
-  }
-}
-
-function caricaConfigInModal() {
-  const configGH = JSON.parse(localStorage.getItem('nutri_pwa_gh')) || {};
-  document.getElementById('ghUsername').value = configGH.username || '';
-  document.getElementById('ghRepo').value = configGH.repo || 'pwa-nutrizionista';
-  document.getElementById('ghToken').value = configGH.token || '';
-}
-
-function salvaConfigurazioneGH() {
-  const configGH = {
-    username: document.getElementById('ghUsername').value.trim(),
-    repo: document.getElementById('ghRepo').value.trim(),
-    token: document.getElementById('ghToken').value.trim()
-  };
-  localStorage.setItem('nutri_pwa_gh', JSON.stringify(configGH));
-  closeConfigModal();
-  alert("Credenziali salvate nel browser!");
-  if (typeof inizializzaDati === 'function') {
-    inizializzaDati();
-  }
-}
-// Registrazione Service Worker per PWA
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js')
-    .then(() => console.log("Service Worker Registrato"))
-    .catch((err) => console.error("Errore SW:", err));
-}
-
-// Inizializzazione dati
-let configGH = JSON.parse(localStorage.getItem('nutri_pwa_gh')) || { username: '', repo: '', token: '' };
-let utenteData = null;
+// STATA DELL'APPLICAZIONE
+let configGH = JSON.parse(localStorage.getItem('configGH')) || { username: '', repo: '', token: '' };
 let alimentiData = [];
+let utenteData = { profilo: {}, progressi: [], piano_corrente: null };
 
-document.addEventListener("DOMContentLoaded", () => {
-  caricaConfigInModal();
-  inizializzaDati();
+// INIZIALIZZAZIONE
+document.addEventListener('DOMContentLoaded', async () => {
+  caricaCredenzialiUI();
+  await sincronizzaConGitHub();
 });
 
-function toggleConfigModal() {
-  document.getElementById('configModal').classList.toggle('hidden');
+// --- GESTIONE SCHEDE (TAB) ---
+function cambiaTab(tabId) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.nav-btn').forEach(el => {
+    el.classList.remove('text-emerald-400');
+    el.classList.add('text-slate-400');
+  });
+
+  const targetTab = document.getElementById(`tab-${tabId}`);
+  const targetNav = document.getElementById(`nav-${tabId}`);
+
+  if (targetTab) targetTab.classList.remove('hidden');
+  if (targetNav) {
+    targetNav.classList.remove('text-slate-400');
+    targetNav.classList.add('text-emerald-400');
+  }
 }
 
-function caricaConfigInModal() {
-  document.getElementById('ghUsername').value = configGH.username || '';
-  document.getElementById('ghRepo').value = configGH.repo || 'pwa-nutrizionista';
-  document.getElementById('ghToken').value = configGH.token || '';
+// --- CONFIGURAZIONE E SYNC GITHUB ---
+function caricaCredenzialiUI() {
+  if (configGH.username) document.getElementById('cfg_username').value = configGH.username;
+  if (configGH.repo) document.getElementById('cfg_repo').value = configGH.repo;
+  if (configGH.token) document.getElementById('cfg_token').value = configGH.token;
 }
 
-function salvaConfigurazioneGH() {
+function salvaConfigurazioneGitHub() {
   configGH = {
-    username: document.getElementById('ghUsername').value.trim(),
-    repo: document.getElementById('ghRepo').value.trim(),
-    token: document.getElementById('ghToken').value.trim()
+    username: document.getElementById('cfg_username').value.trim(),
+    repo: document.getElementById('cfg_repo').value.trim(),
+    token: document.getElementById('cfg_token').value.trim()
   };
-  localStorage.setItem('nutri_pwa_gh', JSON.stringify(configGH));
-  toggleConfigModal();
-  alert("Credenziali salvate nel browser!");
-  inizializzaDati();
+  localStorage.setItem('configGH', JSON.stringify(configGH));
+  alert('Credenziali GitHub salvate!');
+  sincronizzaConGitHub();
 }
 
-// Funzione helper per codificare UTF-8 in Base64 (compatibile con emoji e accenti)
-function utf8_to_b64(str) {
-  return window.btoa(unescape(encodeURIComponent(str)));
-}
+async function sincronizzaConGitHub() {
+  const syncIcon = document.getElementById('syncIcon');
+  if (syncIcon) syncIcon.classList.add('animate-spin');
 
-// CARICAMENTO INIZIALE DATI DA GITHUB O LOCALE
-async function inizializzaDati() {
-  try {
-    const resUtente = await fetch('data/utente_data.json?cache_bust=' + Date.now());
-    utenteData = await resUtente.json();
-    
-    const resAlimenti = await fetch('data/alimenti.json?cache_bust=' + Date.now());
-    alimentiData = await resAlimenti.json();
+  if (configGH.token && configGH.username && configGH.repo) {
+    try {
+      const [alimentiCloud, utenteCloud] = await Promise.all([
+        caricaFileDaGitHub('data/alimenti.json'),
+        caricaFileDaGitHub('data/utente_data.json')
+      ]);
 
-    popolaFormProfilo();
-    if (utenteData.piano_corrente) {
-      mostraPianoInUI(utenteData.piano_corrente);
+      if (alimentiCloud) alimentiData = alimentiCloud;
+      if (utenteCloud) utenteData = utenteCloud;
+
+    } catch (err) {
+      console.warn('Errore sync cloud:', err);
     }
-  } catch (err) {
-    console.log("In attesa di caricamento dati...", err);
-  }
-}
-
-function popolaFormProfilo() {
-  if (!utenteData || !utenteData.profilo) return;
-  const p = utenteData.profilo;
-  document.getElementById('eta').value = p.eta;
-  document.getElementById('sesso').value = p.sesso;
-  document.getElementById('altezza').value = p.altezza_cm;
-  document.getElementById('peso').value = p.peso_kg;
-  document.getElementById('attivita').value = p.livello_attivita;
-  document.getElementById('obiettivo').value = p.obiettivo;
-
-  calcolaTargetNutrizionali(p);
-}
-
-// CALCOLO BMR, TDEE E MACRONUTRIENTI
-function calcolaTargetNutrizionali(profilo) {
-  let bmr = (10 * profilo.peso_kg) + (6.25 * profilo.altezza_cm) - (5 * profilo.eta);
-  bmr = profilo.sesso === 'm' ? bmr + 5 : bmr - 161;
-
-  const tdee = Math.round(bmr * profilo.livello_attivita);
-  let targetKcal = tdee;
-
-  if (profilo.obiettivo === 'ipocalorica') targetKcal = Math.round(tdee * 0.85);
-  if (profilo.obiettivo === 'ipercalorica') targetKcal = Math.round(tdee * 1.15);
-
-  // Ripartizione Macro: Proteine 2g/kg, Grassi 0.9g/kg, Restante Carboidrati
-  const protGrams = Math.round(profilo.peso_kg * 2.0);
-  const grassiGrams = Math.round(profilo.peso_kg * 0.9);
-  const kcalProtGrassi = (protGrams * 4) + (grassiGrams * 9);
-  const carboGrams = Math.max(50, Math.round((targetKcal - kcalProtGrassi) / 4));
-
-  document.getElementById('resBMR').textContent = Math.round(bmr);
-  document.getElementById('resTDEE').textContent = tdee;
-  document.getElementById('resTarget').textContent = targetKcal;
-  document.getElementById('risultatiNutri').classList.remove('hidden');
-
-  return { bmr, tdee, targetKcal, protGrams, carboGrams, grassiGrams };
-}
-
-// FUNZIONE CHIAVE: SALVATAGGIO COMMIT SU GITHUB
-async function salvaFileSuGitHub(pathFile, nuovoOggettoContenuto, commitMessage) {
-  if (!configGH.username || !configGH.token || !configGH.repo) {
-    alert("Configura Username, Repository e Token nelle Impostazioni ⚙️!");
-    toggleConfigModal();
-    return false;
   }
 
-  const url = `https://api.github.com/repos/${configGH.username}/${configGH.repo}/contents/${pathFile}`;
+  popolaUIProfilo();
+  renderListaAlimenti();
+  renderPianoCorrente();
 
-  try {
-    let sha = "";
-    // 1. Recupera lo SHA del file se esiste già
-    const getRes = await fetch(url, {
-      headers: { 
-        'Authorization': `token ${configGH.token}`,
-        'Accept': 'application/vnd.github.v3+json'
-      }
-    });
-
-    if (getRes.ok) {
-      const fileMetaData = await getRes.json();
-      sha = fileMetaData.sha;
-    }
-
-    // 2. Converti in JSON e poi in Base64
-    const stringaJSON = JSON.stringify(nuovoOggettoContenuto, null, 2);
-    const contentBase64 = utf8_to_b64(stringaJSON);
-
-    // 3. Esegui il PUT Commit
-    const bodyPayload = {
-      message: commitMessage,
-      content: contentBase64
-    };
-    if (sha) bodyPayload.sha = sha;
-
-    const putRes = await fetch(url, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `token ${configGH.token}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/vnd.github.v3+json'
-      },
-      body: JSON.stringify(bodyPayload)
-    });
-
-    if (putRes.ok) {
-      console.log(`Salvataggio completato su ${pathFile}`);
-      return true;
-    } else {
-      const errorData = await putRes.json();
-      alert("Errore GitHub API: " + (errorData.message || "Verifica il token e i permessi."));
-      return false;
-    }
-  } catch (err) {
-    alert("Errore di connessione a GitHub: " + err.message);
-    return false;
-  }
+  if (syncIcon) syncIcon.classList.remove('animate-spin');
 }
 
-// AGGIORNA PROFILO
-async function salvaProfilo(e) {
-  e.preventDefault();
-  
-  const nuovoProfilo = {
-    eta: parseInt(document.getElementById('eta').value),
-    sesso: document.getElementById('sesso').value,
-    altezza_cm: parseFloat(document.getElementById('altezza').value),
-    peso_kg: parseFloat(document.getElementById('peso').value),
-    livello_attivita: parseFloat(document.getElementById('attivita').value),
-    obiettivo: document.getElementById('obiettivo').value
+// --- TAB 1: PROFILO & CALCOLO FABBISOGNO ---
+function popolaUIProfilo() {
+  const p = utenteData.profilo || {};
+  if (p.eta) document.getElementById('prof_eta').value = p.eta;
+  if (p.sesso) document.getElementById('prof_sesso').value = p.sesso;
+  if (p.altezza_cm) document.getElementById('prof_altezza').value = p.altezza_cm;
+  if (p.peso_kg) document.getElementById('prof_peso').value = p.peso_kg;
+  if (p.livello_attivita) document.getElementById('prof_attivita').value = p.livello_attivita;
+  if (p.obiettivo) document.getElementById('prof_obiettivo').value = p.obiettivo;
+
+  calcolaETipostatarget();
+}
+
+function calcolaTargetNutrizionali(p) {
+  if (!p.peso_kg || !p.altezza_cm || !p.eta) return { targetKcal: 2000, targetProteine: 150, targetCarbo: 200, targetGrassi: 60 };
+
+  // BMR Formula Mifflin-St Jeor
+  let bmr = (10 * p.peso_kg) + (6.25 * p.altezza_cm) - (5 * p.eta);
+  bmr = p.sesso === 'm' ? bmr + 5 : bmr - 161;
+
+  let tdee = bmr * (p.livello_attivita || 1.375);
+
+  if (p.obiettivo === 'dimagrimento') tdee *= 0.85;
+  if (p.obiettivo === 'massa') tdee *= 1.10;
+
+  const targetKcal = Math.round(tdee);
+  const proteine = Math.round(p.peso_kg * 2.0); // 2g per kg
+  const grassi = Math.round(p.peso_kg * 0.9); // 0.9g per kg
+  const kcalRestanti = targetKcal - (proteine * 4 + grassi * 9);
+  const carbo = Math.max(0, Math.round(kcalRestanti / 4));
+
+  return { targetKcal, targetProteine: proteine, targetCarbo: carbo, targetGrassi: grassi };
+}
+
+function calcolaETipostatarget() {
+  const p = {
+    eta: parseInt(document.getElementById('prof_eta').value) || 28,
+    sesso: document.getElementById('prof_sesso').value || 'm',
+    altezza_cm: parseFloat(document.getElementById('prof_altezza').value) || 175,
+    peso_kg: parseFloat(document.getElementById('prof_peso').value) || 70,
+    livello_attivita: parseFloat(document.getElementById('prof_attivita').value) || 1.375,
+    obiettivo: document.getElementById('prof_obiettivo').value || 'mantenimento'
   };
 
-  utenteData.profilo = nuovoProfilo;
-  const oggi = new Date().toISOString().split('T')[0];
-  if (!utenteData.progressi) utenteData.progressi = [];
-  utenteData.progressi.push({ data: oggi, peso_kg: nuovoProfilo.peso_kg, note: "Aggiornamento profilo" });
-
-  calcolaTargetNutrizionali(nuovoProfilo);
-
-  const ok = await salvaFileSuGitHub('data/utente_data.json', utenteData, 'Aggiornamento profilo utente');
-  if (ok) alert("Profilo e calorie salvati su GitHub!");
+  const res = calcolaTargetNutrizionali(p);
+  document.getElementById('targetKcalVal').innerText = res.targetKcal;
+  document.getElementById('targetProtVal').innerText = res.targetProteine + 'g';
+  document.getElementById('targetCarboVal').innerText = res.targetCarbo + 'g';
+  document.getElementById('targetGrassiVal').innerText = res.targetGrassi + 'g';
 }
 
-// AGGIUNGI ALIMENTO
-async function aggiungiAlimento(e) {
-  e.preventDefault();
-
-  const prot = parseFloat(document.getElementById('foodProt').value) || 0;
-  const carbo = parseFloat(document.getElementById('foodCarbo').value) || 0;
-  const grassi = parseFloat(document.getElementById('foodGrassi').value) || 0;
-  const kcal = Math.round((prot * 4) + (carbo * 4) + (grassi * 9));
-
-  const nuovoAlimento = {
-    id: "cibo_" + Date.now(),
-    nome: document.getElementById('foodNome').value,
-    categoria: document.getElementById('foodCat').value || "Generico",
-    unita: "g",
-    calorie_100g: kcal,
-    proteine_100g: prot,
-    carboidrati_100g: carbo,
-    grassi_100g: grassi
+async function salvaProfiloUtente() {
+  utenteData.profilo = {
+    eta: parseInt(document.getElementById('prof_eta').value) || 28,
+    sesso: document.getElementById('prof_sesso').value || 'm',
+    altezza_cm: parseFloat(document.getElementById('prof_altezza').value) || 175,
+    peso_kg: parseFloat(document.getElementById('prof_peso').value) || 70,
+    livello_attivita: parseFloat(document.getElementById('prof_attivita').value) || 1.375,
+    obiettivo: document.getElementById('prof_obiettivo').value || 'mantenimento'
   };
 
-  alimentiData.push(nuovoAlimento);
+  calcolaETipostatarget();
 
-  const ok = await salvaFileSuGitHub('data/alimenti.json', alimentiData, `Aggiunto alimento: ${nuovoAlimento.nome}`);
-  if (ok) {
-    alert(`Alimento "${nuovoAlimento.nome}" salvato su GitHub!`);
-    document.getElementById('foodForm').reset();
+  if (configGH.token) {
+    await salvaFileSuGitHub('data/utente_data.json', utenteData, 'Aggiornato profilo utente');
+    alert('Profilo salvato correttamente su GitHub!');
+  } else {
+    alert('Profilo salvato in locale.');
   }
 }
 
-// --- ALGORITMO PER LA GENERAZIONE AUTOMATICA DEL PIANO ALIMENTARE ---
-async function generaPianoAlimentare() {
-  // Se alimentiData è vuoto, usa un fallback di alimenti base
+// --- TAB 2: DATABASE ALIMENTI ---
+function renderListaAlimenti(filtro = '') {
+  const container = document.getElementById('listaAlimentiContainer');
+  if (!container) return;
+
   if (!alimentiData || alimentiData.length === 0) {
-    alimentiData = [
-      { id: "1", nome: "Petto di Pollo", proteine_100g: 23, carboidrati_100g: 0, grassi_100g: 1, calorie_100g: 110 },
-      { id: "2", nome: "Riso Basmati", proteine_100g: 7, carboidrati_100g: 78, grassi_100g: 1, calorie_100g: 350 },
-      { id: "3", nome: "Olio d'Oliva", proteine_100g: 0, carboidrati_100g: 0, grassi_100g: 100, calorie_100g: 884 }
-    ];
+    container.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Nessun alimento presente nel database.</p>`;
+    return;
   }
 
-  // Prendi i dati del profilo dalla UI se utenteData non è ancora caricato
-  const profiloLocale = utenteData?.profilo || {
-    eta: parseInt(document.getElementById('eta').value) || 28,
-    sesso: document.getElementById('sesso').value || 'm',
-    altezza_cm: parseFloat(document.getElementById('altezza').value) || 175,
-    peso_kg: parseFloat(document.getElementById('peso').value) || 70,
-    livello_attivita: parseFloat(document.getElementById('attivita').value) || 1.375,
-    obiettivo: document.getElementById('obiettivo').value || 'mantenimento'
+  let html = '';
+  const cibiFiltrati = alimentiData.filter(a => a.nome.toLowerCase().includes(filtro.toLowerCase()));
+
+  cibiFiltrati.forEach(a => {
+    const isAttivo = a.attivo !== false; // Di default attivo se non specificato
+
+    html += `
+      <div class="bg-slate-900 border ${isAttivo ? 'border-slate-800' : 'border-red-900/30 opacity-60'} p-3 rounded-xl flex items-center justify-between gap-2">
+        <div class="flex-1">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-semibold text-white">${a.nome}</span>
+            <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-md">${a.categoria || 'Generico'}</span>
+          </div>
+          <div class="text-[11px] text-slate-400 mt-1 flex gap-3 font-mono">
+            <span>🔥 ${a.calorie_100g} kcal</span>
+            <span>P: ${a.proteine_100g}g</span>
+            <span>C: ${a.carboidrati_100g}g</span>
+            <span>G: ${a.grassi_100g}g</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- TOGGLE ATTIVO / INATTIVO PER IL GENERATORE PIANO -->
+          <button onclick="toggleAttivoAlimento('${a.id}')" class="text-xs px-2.5 py-1 rounded-lg border transition-all ${isAttivo ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-red-500/10 text-red-400 border-red-500/30'}">
+            ${isAttivo ? 'Attivo' : 'Inattivo'}
+          </button>
+          
+          <button onclick="apriModalAlimento('${a.id}')" class="p-1.5 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700">✏️</button>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function filtraAlimentiUI() {
+  const query = document.getElementById('cercaAlimentoInput').value;
+  renderListaAlimenti(query);
+}
+
+function apriModalAlimento(id = null) {
+  document.getElementById('modalAlimento').classList.remove('hidden');
+  if (id) {
+    const alim = alimentiData.find(a => a.id === id);
+    document.getElementById('modalAlimentoTitolo').innerText = '✏️ Modifica Alimento';
+    document.getElementById('editAlimentoId').value = alim.id;
+    document.getElementById('alim_nome').value = alim.nome;
+    document.getElementById('alim_categoria').value = alim.categoria || 'Proteine';
+    document.getElementById('alim_kcal').value = alim.calorie_100g;
+    document.getElementById('alim_prot').value = alim.proteine_100g;
+    document.getElementById('alim_carbo').value = alim.carboidrati_100g;
+    document.getElementById('alim_grassi').value = alim.grassi_100g;
+  } else {
+    document.getElementById('modalAlimentoTitolo').innerText = '➕ Aggiungi Alimento';
+    document.getElementById('editAlimentoId').value = '';
+    document.getElementById('alim_nome').value = '';
+    document.getElementById('alim_kcal').value = '';
+    document.getElementById('alim_prot').value = '';
+    document.getElementById('alim_carbo').value = '';
+    document.getElementById('alim_grassi').value = '';
+  }
+}
+
+function chiudiModalAlimento() {
+  document.getElementById('modalAlimento').classList.add('hidden');
+}
+
+async function salvaAlimento() {
+  const id = document.getElementById('editAlimentoId').value;
+  const nuovo = {
+    id: id || 'cibo_' + Date.now(),
+    nome: document.getElementById('alim_nome').value.trim(),
+    categoria: document.getElementById('alim_categoria').value,
+    calorie_100g: parseFloat(document.getElementById('alim_kcal').value) || 0,
+    proteine_100g: parseFloat(document.getElementById('alim_prot').value) || 0,
+    carboidrati_100g: parseFloat(document.getElementById('alim_carbo').value) || 0,
+    grassi_100g: parseFloat(document.getElementById('alim_grassi').value) || 0,
+    attivo: true
   };
 
-  const target = calcolaTargetNutrizionali(profiloLocale);
+  if (!nuovo.nome) return alert('Inserisci il nome dell\'alimento');
 
-  const ripartizionePasti = [
+  if (id) {
+    const idx = alimentiData.findIndex(a => a.id === id);
+    if (idx !== -1) {
+      nuovo.attivo = alimentiData[idx].attivo !== false;
+      alimentiData[idx] = nuovo;
+    }
+  } else {
+    alimentiData.push(nuovo);
+  }
+
+  chiudiModalAlimento();
+  renderListaAlimenti();
+
+  if (configGH.token) {
+    await salvaFileSuGitHub('data/alimenti.json', alimentiData, 'Aggiornato database alimenti');
+  }
+}
+
+async function toggleAttivoAlimento(id) {
+  const alim = alimentiData.find(a => a.id === id);
+  if (alim) {
+    alim.attivo = alim.attivo === false ? true : false;
+    renderListaAlimenti();
+    if (configGH.token) {
+      await salvaFileSuGitHub('data/alimenti.json', alimentiData, `Cambiato stato attivo/inattivo per ${alim.nome}`);
+    }
+  }
+}
+
+// --- TAB 3: GENERAZIONE E VISUALIZZAZIONE PIANI ---
+async function generaPianoAlimentare() {
+  // Prendi solo i cibi contrassegnati come ATTIVI
+  const cibiAttivi = alimentiData.filter(a => a.attivo !== false);
+
+  if (cibiAttivi.length === 0) {
+    alert('Nessun alimento attivo disponibile! Attiva qualche alimento dal menu "Alimenti".');
+    return;
+  }
+
+  const target = calcolaTargetNutrizionali(utenteData.profilo || {});
+
+  const ripartizione = [
     { nome: "Colazione", quota: 0.20 },
     { nome: "Spuntino Mattina", quota: 0.10 },
     { nome: "Pranzo", quota: 0.35 },
@@ -280,70 +284,140 @@ async function generaPianoAlimentare() {
     { nome: "Cena", quota: 0.25 }
   ];
 
-  const pianoGenerato = {
+  const piano = {
     data_creazione: new Date().toISOString().split('T')[0],
     target_totale: target,
     pasti: []
   };
 
-  ripartizionePasti.forEach(pastoInfo => {
-    const kcalPastoTarget = target.targetKcal * pastoInfo.quota;
-    
-    const protItem = alimentiData[0];
-    const carboItem = alimentiData[1] || alimentiData[0];
-    
-    const grammiProt = Math.round((kcalPastoTarget * 0.4) / (protItem.calorie_100g / 100));
-    const grammiCarbo = Math.round((kcalPastoTarget * 0.6) / (carboItem.calorie_100g / 100));
+  // Separa cibi per categoria principale
+  const fontiProteine = cibiAttivi.filter(c => c.categoria === 'Proteine') || cibiAttivi;
+  const fontiCarbo = cibiAttivi.filter(c => c.categoria === 'Carboidrati') || cibiAttivi;
 
-    pianoGenerato.pasti.push({
+  ripartizione.forEach(pastoInfo => {
+    const kcalTargetPasto = target.targetKcal * pastoInfo.quota;
+
+    // Seleziona alimenti a caso tra quelli attivi
+    const protItem = fontiProteine[Math.floor(Math.random() * fontiProteine.length)] || cibiAttivi[0];
+    const carboItem = fontiCarbo[Math.floor(Math.random() * fontiCarbo.length)] || cibiAttivi[0];
+
+    const gProt = Math.round((kcalTargetPasto * 0.4) / ((protItem.calorie_100g || 100) / 100));
+    const gCarbo = Math.round((kcalTargetPasto * 0.6) / ((carboItem.calorie_100g || 100) / 100));
+
+    piano.pasti.push({
       pasto: pastoInfo.nome,
-      target_kcal: Math.round(kcalPastoTarget),
+      target_kcal: Math.round(kcalTargetPasto),
       alimenti: [
-        { nome: protItem.nome, grammi: grammiProt, kcal: Math.round((protItem.calorie_100g / 100) * grammiProt) },
-        { nome: carboItem.nome, grammi: grammiCarbo, kcal: Math.round((carboItem.calorie_100g / 100) * grammiCarbo) }
+        { nome: protItem.nome, grammi: gProt, kcal: Math.round((protItem.calorie_100g / 100) * gProt) },
+        { nome: carboItem.nome, grammi: gCarbo, kcal: Math.round((carboItem.calorie_100g / 100) * gCarbo) }
       ]
     });
   });
 
-  if (!utenteData) utenteData = { profilo: profiloLocale, progressi: [] };
-  utenteData.piano_corrente = pianoGenerato;
-  
-  // Mostra subito il piano a schermo
-  mostraPianoInUI(pianoGenerato);
+  utenteData.piano_corrente = piano;
+  renderPianoCorrente();
 
-  // Prova a sincronizzare su GitHub se il token è impostato
   if (configGH.token) {
     await salvaFileSuGitHub('data/utente_data.json', utenteData, 'Generato nuovo piano alimentare');
-  } else {
-    alert("Piano generato a schermo! Configura il Token GitHub nelle Impostazioni se vuoi salvarlo permanentemente sul cloud.");
+    alert('Nuovo piano generato e sincronizzato!');
   }
 }
 
-function mostraPianoInUI(piano) {
-  const container = document.getElementById('pianoContainer');
-  const listaPasti = document.getElementById('listaPasti');
-  listaPasti.innerHTML = '';
+function renderPianoCorrente() {
+  const container = document.getElementById('pianoCorrenteContainer');
+  if (!container) return;
+
+  const piano = utenteData?.piano_corrente;
+  if (!piano) {
+    container.innerHTML = `<div class="text-center py-8 bg-slate-900 border border-slate-800 rounded-2xl text-slate-400 text-xs">Nessun piano attivo. Clicca su "Genera Nuovo Piano" per crearlo.</div>`;
+    return;
+  }
+
+  let html = `
+    <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div>
+          <h3 class="text-sm font-bold text-emerald-400">Piano Attivo del ${piano.data_creazione}</h3>
+          <p class="text-[11px] text-slate-400">Target giornaliero generato</p>
+        </div>
+        <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full font-mono font-bold">
+          ${piano.target_totale.targetKcal} kcal
+        </span>
+      </div>
+
+      <div class="space-y-3">
+  `;
 
   piano.pasti.forEach(p => {
-    const card = document.createElement('div');
-    card.className = "bg-slate-900/70 p-3 rounded-xl border border-slate-700/50 space-y-2";
-    
-    let htmlAlimenti = p.alimenti.map(a => 
-      `<li class="flex justify-between text-xs text-slate-300">
-        <span>• ${a.nome}</span>
-        <span class="font-semibold text-emerald-400">${a.grammi}g (${a.kcal} kcal)</span>
-      </li>`
-    ).join('');
-
-    card.innerHTML = `
-      <div class="flex justify-between items-center border-b border-slate-800 pb-1">
-        <span class="font-bold text-sm text-slate-200">${p.pasto}</span>
-        <span class="text-xs bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded-full">~${p.target_kcal} kcal</span>
-      </div>
-      <ul class="space-y-1 mt-1">${htmlAlimenti}</ul>
+    html += `
+      <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+        <div class="flex justify-between items-center text-xs font-semibold text-slate-300 mb-2">
+          <span class="text-emerald-400">${p.pasto}</span>
+          <span class="text-slate-400 font-mono">${p.target_kcal} kcal</span>
+        </div>
+        <ul class="text-xs text-slate-300 space-y-1">
     `;
-    listaPasti.appendChild(card);
+    p.alimenti.forEach(a => {
+      html += `<li class="flex justify-between border-b border-slate-900 pb-1">
+        <span>• ${a.nome}</span>
+        <span class="font-mono text-slate-400">${a.grammi}g <span class="text-[10px] text-slate-500">(${a.kcal} kcal)</span></span>
+      </li>`;
+    });
+    html += `</ul></div>`;
   });
 
-  container.classList.remove('hidden');
+  html += `</div></div>`;
+  container.innerHTML = html;
+}
+
+// --- FUNZIONI DI CHIAMATA HTTP A GITHUB API ---
+async function caricaFileDaGitHub(pathFile) {
+  if (!configGH.token || !configGH.username || !configGH.repo) return null;
+
+  const url = `https://api.github.com/repos/${configGH.username}/${configGH.repo}/contents/${pathFile}`;
+  const res = await fetch(url, {
+    headers: { 'Authorization': `token ${configGH.token}`, 'Accept': 'application/vnd.github.v3+json' },
+    cache: 'no-store'
+  });
+
+  if (!res.ok) return null;
+  const data = await res.json();
+  const content = decodeURIComponent(escape(atob(data.content)));
+  return JSON.parse(content);
+}
+
+async function salvaFileSuGitHub(pathFile, contenuto, commitMessage) {
+  if (!configGH.token || !configGH.username || !configGH.repo) return;
+
+  const url = `https://api.github.com/repos/${configGH.username}/${configGH.repo}/contents/${pathFile}`;
+  
+  let sha = null;
+  try {
+    const getRes = await fetch(url, {
+      headers: { 'Authorization': `token ${configGH.token}` },
+      cache: 'no-store'
+    });
+    if (getRes.ok) {
+      const fileData = await getRes.json();
+      sha = fileData.sha;
+    }
+  } catch (e) {
+    console.log('File nuovo, nessun SHA precedente');
+  }
+
+  const jsonStr = JSON.stringify(contenuto, null, 2);
+  const contentBase64 = btoa(unescape(encodeURIComponent(jsonStr)));
+
+  await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `token ${configGH.token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      message: commitMessage,
+      content: contentBase64,
+      sha: sha || undefined
+    })
+  });
 }
