@@ -51,9 +51,25 @@
 
     <!-- SEZIONE PROFILO -->
     <section id="sec-profilo" class="space-y-6">
+      
+      <!-- Selettore / Gestione Profili Rapida -->
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <span class="text-sm font-semibold text-gray-700">Profilo Attivo:</span>
+          <select id="selectProfiloAttivo" class="p-2 border rounded-lg text-sm bg-gray-50 font-medium focus:ring-2 focus:ring-emerald-500 outline-none flex-1 sm:w-48">
+            <option value="default">default</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <button id="btnNuovoProfilo" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg font-medium transition">
+            ➕ Nuovo Profilo
+          </button>
+        </div>
+      </div>
+
       <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span>👤</span> Profilo Utente & Parametri Corporei
+          <span>👤</span> Dati Profilo Corporeo
         </h2>
 
         <form id="formProfilo" onsubmit="event.preventDefault();" class="space-y-6">
@@ -62,8 +78,8 @@
             <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Dati Generali</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div class="md:col-span-3">
-                <label class="block text-xs font-medium text-gray-700 mb-1">Nome Utente</label>
-                <input type="text" id="prof_nome" placeholder="Es. Simone" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Nome Identificativo Profilo</label>
+                <input type="text" id="prof_nome" placeholder="Es. simone" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
               </div>
               <div>
                 <label class="block text-xs font-medium text-gray-700 mb-1">Età</label>
@@ -186,29 +202,22 @@
       </div>
     </section>
 
-    <!-- MODALE CONFIGURAZIONE CLOUD (IMPOSTAZIONI GITHUB) -->
+    <!-- MODALE CONFIGURAZIONE CLOUD (SOLO TOKEN) -->
     <div id="modalConfig" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
       <div class="bg-white w-full max-w-md rounded-xl p-6 shadow-xl space-y-4">
         <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-          <span>⚙️</span> Configurazione Cloud
+          <span>⚙️</span> Impostazioni GitHub
         </h3>
-        <p class="text-xs text-gray-500">Inserisci il tuo Personal Access Token GitHub per l'autenticazione e specifica l'ID del profilo utente.</p>
+        <p class="text-xs text-gray-500">Inserisci il tuo Personal Access Token di GitHub per connettere l'applicazione al repository cloud.</p>
         
-        <div class="space-y-3">
-          <div>
-            <label class="block text-xs font-medium text-gray-700 mb-1">GitHub Personal Access Token</label>
-            <input type="password" id="cfg_token" placeholder="ghp_xxxxxxxxxxxx" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-700 mb-1">ID Profilo (Nome File Cloud)</label>
-            <input type="text" id="cfg_profilo_id" placeholder="Es. simone" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
-            <p class="text-[10px] text-gray-500 mt-0.5">File associato: <code id="lblNomeFilePreview" class="text-emerald-700 font-mono">data/utente_default.json</code></p>
-          </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">GitHub Personal Access Token</label>
+          <input type="password" id="cfg_token" placeholder="ghp_xxxxxxxxxxxx" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
         </div>
 
         <div class="flex justify-end gap-2 pt-2">
           <button type="button" id="btnChiudiConfig" class="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition">Annulla</button>
-          <button type="button" id="btnSalvaConfig" class="px-4 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition">Salva e Sincronizza</button>
+          <button type="button" id="btnSalvaConfig" class="px-4 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition">Salva Token</button>
         </div>
       </div>
     </div>
