@@ -251,18 +251,27 @@ async function aggiungiAlimento(e) {
 
 // --- ALGORITMO PER LA GENERAZIONE AUTOMATICA DEL PIANO ALIMENTARE ---
 async function generaPianoAlimentare() {
-  if (!utenteData || !utenteData.profilo) {
-    alert("Compila e salva prima il tuo profilo!");
-    return;
-  }
-  if (alimentiData.length === 0) {
-    alert("Il database alimenti è vuoto. Aggiungi prima dei cibi!");
-    return;
+  // Se alimentiData è vuoto, usa un fallback di alimenti base
+  if (!alimentiData || alimentiData.length === 0) {
+    alimentiData = [
+      { id: "1", nome: "Petto di Pollo", proteine_100g: 23, carboidrati_100g: 0, grassi_100g: 1, calorie_100g: 110 },
+      { id: "2", nome: "Riso Basmati", proteine_100g: 7, carboidrati_100g: 78, grassi_100g: 1, calorie_100g: 350 },
+      { id: "3", nome: "Olio d'Oliva", proteine_100g: 0, carboidrati_100g: 0, grassi_100g: 100, calorie_100g: 884 }
+    ];
   }
 
-  const target = calcolaTargetNutrizionali(utenteData.profilo);
+  // Prendi i dati del profilo dalla UI se utenteData non è ancora caricato
+  const profiloLocale = utenteData?.profilo || {
+    eta: parseInt(document.getElementById('eta').value) || 28,
+    sesso: document.getElementById('sesso').value || 'm',
+    altezza_cm: parseFloat(document.getElementById('altezza').value) || 175,
+    peso_kg: parseFloat(document.getElementById('peso').value) || 70,
+    livello_attivita: parseFloat(document.getElementById('attivita').value) || 1.375,
+    obiettivo: document.getElementById('obiettivo').value || 'mantenimento'
+  };
 
-  // Suddivisione Calorie nei pasti: Colazione (20%), Spuntino (10%), Pranzo (35%), Merenda (10%), Cena (25%)
+  const target = calcolaTargetNutrizionali(profiloLocale);
+
   const ripartizionePasti = [
     { nome: "Colazione", quota: 0.20 },
     { nome: "Spuntino Mattina", quota: 0.10 },
@@ -277,19 +286,12 @@ async function generaPianoAlimentare() {
     pasti: []
   };
 
-  // Seleziona un alimento per ciascuna categoria disponibile
-  const cibiProteici = alimentiData.filter(a => a.proteine_100g > 10) || alimentiData;
-  const cibiCarbo = alimentiData.filter(a => a.carboidrati_100g > 15) || alimentiData;
-  const cibiGrassi = alimentiData.filter(a => a.grassi_100g > 10) || alimentiData;
-
   ripartizionePasti.forEach(pastoInfo => {
     const kcalPastoTarget = target.targetKcal * pastoInfo.quota;
     
-    // Scegli casualmente dalla lista cibi
-    const protItem = cibiProteici[Math.floor(Math.random() * cibiProteici.length)] || alimentiData[0];
-    const carboItem = cibiCarbo[Math.floor(Math.random() * cibiCarbo.length)] || alimentiData[0];
+    const protItem = alimentiData[0];
+    const carboItem = alimentiData[1] || alimentiData[0];
     
-    // Grammature stimate per coprire il target del pasto
     const grammiProt = Math.round((kcalPastoTarget * 0.4) / (protItem.calorie_100g / 100));
     const grammiCarbo = Math.round((kcalPastoTarget * 0.6) / (carboItem.calorie_100g / 100));
 
@@ -303,12 +305,17 @@ async function generaPianoAlimentare() {
     });
   });
 
+  if (!utenteData) utenteData = { profilo: profiloLocale, progressi: [] };
   utenteData.piano_corrente = pianoGenerato;
+  
+  // Mostra subito il piano a schermo
   mostraPianoInUI(pianoGenerato);
 
-  const ok = await salvaFileSuGitHub('data/utente_data.json', utenteData, 'Generato nuovo piano alimentare');
-  if (ok) {
-    alert("Nuovo piano alimentare generato e salvato su GitHub!");
+  // Prova a sincronizzare su GitHub se il token è impostato
+  if (configGH.token) {
+    await salvaFileSuGitHub('data/utente_data.json', utenteData, 'Generato nuovo piano alimentare');
+  } else {
+    alert("Piano generato a schermo! Configura il Token GitHub nelle Impostazioni se vuoi salvarlo permanentemente sul cloud.");
   }
 }
 
