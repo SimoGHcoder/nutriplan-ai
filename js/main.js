@@ -1,53 +1,22 @@
-import { getConfigGH, saveConfigGH, caricaCredenzialiUI, leggiCredenzialiForm } from './config.js';
-import { caricaFileDaGitHub, salvaFileSuGitHub } from './api/github.js';
+// js/main.js
+
 import { inizializzaNavigazione } from './ui/navigation.js';
 import { popolaUIProfilo, leggiProfiloForm, aggiornaResocontoFabbisogno } from './ui/profiloUI.js';
-import { renderListaAlimenti, apriModalAlimento, chiudiModalAlimento, leggiAlimentoForm } from './ui/alimentiUI.js';
-import { renderPianoCorrente } from './ui/pianiUI.js';
-import { generaStrutturaPiano } from './modules/alimenti.js';
+import { getConfigGH, caricaFileDaGitHub, salvaFileSuGitHub } from './services/githubService.js';
 
 let alimentiData = [];
-let utenteData = { profilo: {}, progressi: [], piano_corrente: null };
+let utenteData = {
+  profilo: {},
+  piano_alimentare: []
+};
 
 document.addEventListener('DOMContentLoaded', async () => {
   inizializzaNavigazione();
-  caricaCredenzialiUI();
   collegaEventiUI();
+  
+  // Sincronizzazione automatica iniziale se il token è memorizzato
   await sincronizzaConGitHub();
 });
-
-function collegaEventiUI() {
-  document.getElementById('btnSyncCloud')?.addEventListener('click', sincronizzaConGitHub);
-
-  document.getElementById('btnSalvaProfilo')?.addEventListener('click', salvaProfiloHandler);
-  ['prof_eta', 'prof_sesso', 'prof_altezza', 'prof_peso', 'prof_grasso', 'prof_muscolo', 'prof_viscerale', 'prof_attivita', 'prof_obiettivo'].forEach(id => {
-  document.getElementById(id)?.addEventListener('change', aggiornaResocontoFabbisogno);
-  document.getElementById(id)?.addEventListener('input', aggiornaResocontoFabbisogno);
-});
-
-  document.getElementById('btnNuovoAlimento')?.addEventListener('click', () => apriModalAlimento());
-  document.getElementById('btnChiudiModalAlimento')?.addEventListener('click', chiudiModalAlimento);
-  document.getElementById('btnSalvaAlimento')?.addEventListener('click', salvaAlimentoHandler);
-  document.getElementById('cercaAlimentoInput')?.addEventListener('input', (e) => {
-    renderListaAlimenti(alimentiData, e.target.value, toggleAttivoHandler, editAlimentoHandler);
-  });
-
-  document.getElementById('btnGeneraPiano')?.addEventListener('click', generaPianoHandler);
-
-  document.getElementById('btnSalvaConfig')?.addEventListener('click', () => {
-    const nuovaCfg = leggiCredenzialiForm();
-    saveConfigGH(nuovaCfg);
-    alert('Credenziali GitHub salvate!');
-    sincronizzaConGitHub();
-  });
-  document.getElementById('btnSettings')?.addEventListener('click', () => {
-    document.getElementById('modalConfig')?.classList.remove('hidden');
-  });
-
-  document.getElementById('btnChiudiConfig')?.addEventListener('click', () => {
-    document.getElementById('modalConfig')?.classList.add('hidden');
-  });
-}
 
 async function sincronizzaConGitHub() {
   const syncIcon = document.getElementById('syncIcon');
@@ -56,24 +25,23 @@ async function sincronizzaConGitHub() {
   const configGH = getConfigGH();
   if (configGH.token && configGH.username && configGH.repo) {
     try {
+      const percorsoFileUtente = `data/utente_${configGH.profiloId}.json`;
       const [alimentiCloud, utenteCloud] = await Promise.all([
         caricaFileDaGitHub('data/alimenti.json'),
-        caricaFileDaGitHub('data/utente_data.json')
+        caricaFileDaGitHub(percorsoFileUtente)
       ]);
 
       if (alimentiCloud) alimentiData = alimentiCloud;
-      
-      // AGGIUNTO: Se trova i dati utente sul cloud, li carica nell'app e aggiorna la schermata
       if (utenteCloud) {
         utenteData = utenteCloud;
-        popolaUIProfilo(utenteData); // Riempie i campi del profilo con i dati salvati
+        popolaUIProfilo(utenteData);
       }
     } catch (err) {
       console.warn('Errore sync cloud:', err);
     }
   }
 
-  // Se non siamo collegati a GitHub o non ci sono dati cloud, prova a leggerli dal localStorage come fallback
+  // Fallback su localStorage se non c'è cloud o token
   if (!utenteData.profilo || Object.keys(utenteData.profilo).length === 0) {
     const localeSalvato = localStorage.getItem('pwa_utente_data');
     if (localeSalvato) {
@@ -86,75 +54,57 @@ async function sincronizzaConGitHub() {
     }
   }
 
-  renderListaAlimenti(alimentiData, '', toggleAttivoHandler, editAlimentoHandler);
-  renderPianoCorrente(utenteData);
-
   if (syncIcon) syncIcon.classList.remove('animate-spin');
 }
 
-async function salvaProfiloHandler() {
-  utenteData.profilo = leggiProfiloForm();
-  aggiornaResocontoFabbisogno();
+function collegaEventiUI() {
+  // Ascoltatori modifica campi profilo per ricalcolo in tempo reale
+  ['prof_eta', 'prof_sesso', 'prof_altezza', 'prof_peso', 'prof_grasso', 'prof_muscolo', 'prof_viscerale', 'prof_attivita', 'prof_obiettivo'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', aggiornaResocontoFabbisogno);
+    document.getElementById(id)?.addEventListener('input', aggiornaResocontoFabbisogno);
+  });
 
-  const configGH = getConfigGH();
-  if (configGH.token) {
-    await salvaFileSuGitHub('data/utente_data.json', utenteData, 'Aggiornato profilo utente');
-    alert('Profilo salvato su GitHub!');
-  } else {
-    alert('Profilo salvato in locale.');
-  }
-}
+  // Tasto Salva Profilo
+  document.getElementById('btnSalvaProfilo')?.addEventListener('click', async () => {
+    utenteData.profilo = leggiProfiloForm();
+    
+    // Backup locale
+    localStorage.setItem('pwa_utente_data', JSON.stringify(utenteData));
 
-async function salvaAlimentoHandler() {
-  const nuovo = leggiAlimentoForm();
-  if (!nuovo.nome) return alert("Inserisci il nome dell'alimento");
-
-  const idx = alimentiData.findIndex(a => a.id === nuovo.id);
-  if (idx !== -1) {
-    nuovo.attivo = alimentiData[idx].attivo !== false;
-    alimentiData[idx] = nuovo;
-  } else {
-    alimentiData.push(nuovo);
-  }
-
-  chiudiModalAlimento();
-  renderListaAlimenti(alimentiData, '', toggleAttivoHandler, editAlimentoHandler);
-
-  const configGH = getConfigGH();
-  if (configGH.token) {
-    await salvaFileSuGitHub('data/alimenti.json', alimentiData, 'Aggiornato database alimenti');
-  }
-}
-
-async function toggleAttivoHandler(id) {
-  const alim = alimentiData.find(a => a.id === id);
-  if (alim) {
-    alim.attivo = alim.attivo === false ? true : false;
-    renderListaAlimenti(alimentiData, '', toggleAttivoHandler, editAlimentoHandler);
+    // Salvataggio Cloud su file specifico utente
     const configGH = getConfigGH();
-    if (configGH.token) {
-      await salvaFileSuGitHub('data/alimenti.json', alimentiData, `Cambiato stato attivo/inattivo per ${alim.nome}`);
+    const percorsoFileUtente = `data/utente_${configGH.profiloId}.json`;
+
+    try {
+      await salvaFileSuGitHub(percorsoFileUtente, utenteData, `Aggiornamento profilo ${configGH.profiloId}`);
+      alert('Profilo salvato e sincronizzato con successo su GitHub!');
+    } catch (err) {
+      alert('Profilo salvato in locale. Errore sync GitHub: ' + err.message);
     }
-  }
-}
+  });
 
-function editAlimentoHandler(id) {
-  const alim = alimentiData.find(a => a.id === id);
-  if (alim) apriModalAlimento(alim);
-}
+  // Tasto Sync manuale (🔄)
+  document.getElementById('btnSyncCloud')?.addEventListener('click', async () => {
+    await sincronizzaConGitHub();
+    alert('Sincronizzazione completata!');
+  });
 
-async function generaPianoHandler() {
-  try {
-    const piano = generaStrutturaPiano(alimentiData, utenteData);
-    utenteData.piano_corrente = piano;
-    renderPianoCorrente(utenteData);
+  // Salvataggio Configurazione GitHub e avvio immediato sincronizzazione
+  document.getElementById('btnSalvaConfig')?.addEventListener('click', async () => {
+    const token = document.getElementById('cfg_token').value.trim();
+    const username = document.getElementById('cfg_username').value.trim();
+    const repo = document.getElementById('cfg_repo').value.trim();
+    const profiloId = document.getElementById('cfg_profilo_id').value.trim() || 'default';
 
-    const configGH = getConfigGH();
-    if (configGH.token) {
-      await salvaFileSuGitHub('data/utente_data.json', utenteData, 'Generato nuovo piano alimentare');
-      alert('Nuovo piano generato e sincronizzato!');
-    }
-  } catch (err) {
-    alert(err.message);
-  }
+    localStorage.setItem('gh_token', token);
+    localStorage.setItem('gh_username', username);
+    localStorage.setItem('gh_repo', repo);
+    localStorage.setItem('gh_profilo_id', profiloId);
+
+    document.getElementById('modalConfig')?.classList.add('hidden');
+
+    // Sincronizza subito con le nuove credenziali inserite
+    await sincronizzaConGitHub();
+    alert('Configurazione salvata e profilo caricato correttamente!');
+  });
 }
