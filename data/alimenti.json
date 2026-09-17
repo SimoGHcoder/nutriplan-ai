@@ -29,5 +29,15 @@
     "proteine_100g": 0,
     "carboidrati_100g": 0,
     "grassi_100g": 100
+  },
+  {
+    "id": "cibo_1789665396085",
+    "nome": "carne",
+    "categoria": "Proteine",
+    "calorie_100g": 115,
+    "proteine_100g": 23,
+    "carboidrati_100g": 0,
+    "grassi_100g": 1.2,
+    "attivo": true
   }
 ]
