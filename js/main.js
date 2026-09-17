@@ -62,13 +62,30 @@ async function sincronizzaConGitHub() {
       ]);
 
       if (alimentiCloud) alimentiData = alimentiCloud;
-      if (utenteCloud) utenteData = utenteCloud;
+      
+      // AGGIUNTO: Se trova i dati utente sul cloud, li carica nell'app e aggiorna la schermata
+      if (utenteCloud) {
+        utenteData = utenteCloud;
+        popolaUIProfilo(utenteData); // Riempie i campi del profilo con i dati salvati
+      }
     } catch (err) {
       console.warn('Errore sync cloud:', err);
     }
   }
 
-  popolaUIProfilo(utenteData);
+  // Se non siamo collegati a GitHub o non ci sono dati cloud, prova a leggerli dal localStorage come fallback
+  if (!utenteData.profilo || Object.keys(utenteData.profilo).length === 0) {
+    const localeSalvato = localStorage.getItem('pwa_utente_data');
+    if (localeSalvato) {
+      try {
+        utenteData = JSON.parse(localeSalvato);
+        popolaUIProfilo(utenteData);
+      } catch (e) {
+        console.error('Errore parsing dati locali', e);
+      }
+    }
+  }
+
   renderListaAlimenti(alimentiData, '', toggleAttivoHandler, editAlimentoHandler);
   renderPianoCorrente(utenteData);
 
