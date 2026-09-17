@@ -2,34 +2,21 @@
 
 let callbackToggleAlimento = null;
 let callbackEditAlimento = null;
+let debounceTimer = null;
 
-// Database di riferimento per il riconoscimento automatico (valori per 100g)
-const DATABASE_RIFERIMENTO = [
-  { nome: "Riso bianco bollito/crudo", categoria: "Carboidrati", kcal: 350, prot: 6.7, carbo: 79.0, grassi: 0.4 },
+// Database di fallback rapido per alimenti base (generi comuni)
+const DATABASE_BASE = [
+  { nome: "Riso bianco", categoria: "Carboidrati", kcal: 350, prot: 6.7, carbo: 79.0, grassi: 0.4 },
   { nome: "Riso Basmati", categoria: "Carboidrati", kcal: 345, prot: 7.0, carbo: 78.0, grassi: 0.6 },
-  { nome: "Riso Integrale", categoria: "Carboidrati", kcal: 337, prot: 7.5, carbo: 74.0, grassi: 2.2 },
-  { nome: "Pasta di semola di grano duro", categoria: "Carboidrati", kcal: 353, prot: 10.9, carbo: 71.7, grassi: 1.4 },
-  { nome: "Pasta integrale", categoria: "Carboidrati", kcal: 348, prot: 12.5, carbo: 64.7, grassi: 2.0 },
+  { nome: "Pasta di semola", categoria: "Carboidrati", kcal: 353, prot: 10.9, carbo: 71.7, grassi: 1.4 },
   { nome: "Petto di pollo", categoria: "Proteine", kcal: 100, prot: 23.3, carbo: 0.0, grassi: 0.8 },
   { nome: "Petto di tacchino", categoria: "Proteine", kcal: 107, prot: 22.4, carbo: 0.0, grassi: 1.7 },
-  { nome: "Carne bovina magra (fesa)", categoria: "Proteine", kcal: 115, prot: 21.0, carbo: 0.0, grassi: 3.2 },
   { nome: "Filetto di Salmone", categoria: "Proteine", kcal: 185, prot: 18.4, carbo: 0.0, grassi: 12.0 },
-  { nome: "Petto di Merluzzo / Filetti", categoria: "Proteine", kcal: 82, prot: 17.8, carbo: 0.0, grassi: 0.9 },
   { nome: "Tonno in scatola al naturale", categoria: "Proteine", kcal: 103, prot: 25.0, carbo: 0.0, grassi: 0.8 },
-  { nome: "Uova di gallina (intero)", categoria: "Proteine", kcal: 128, prot: 12.4, carbo: 0.1, grassi: 8.7 },
-  { nome: "Albume d'uovo", categoria: "Proteine", kcal: 52, prot: 10.9, carbo: 0.7, grassi: 0.2 },
+  { nome: "Uova intere", categoria: "Proteine", kcal: 128, prot: 12.4, carbo: 0.1, grassi: 8.7 },
   { nome: "Olio extravergine d'oliva", categoria: "Grassi", kcal: 899, prot: 0.0, carbo: 0.0, grassi: 99.9 },
-  { nome: "Burro", categoria: "Grassi", kcal: 758, prot: 0.8, carbo: 0.7, grassi: 83.3 },
-  { nome: "Mandorle sgusciate", categoria: "Grassi", kcal: 603, prot: 22.1, carbo: 5.9, grassi: 52.5 },
   { nome: "Parmigiano Reggiano", categoria: "Proteine", kcal: 387, prot: 33.0, carbo: 0.0, grassi: 28.4 },
-  { nome: "Fiocchi di latte (Vitasnella/Light)", categoria: "Proteine", kcal: 98, prot: 12.5, carbo: 3.5, grassi: 4.0 },
-  { nome: "Yogurt greco 0% grassi", categoria: "Proteine", kcal: 57, prot: 10.3, carbo: 3.6, grassi: 0.4 },
-  { nome: "Patate bollite", categoria: "Carboidrati", kcal: 87, prot: 2.1, carbo: 20.0, grassi: 0.1 },
-  { nome: "Pane di tipo 0", categoria: "Carboidrati", kcal: 289, prot: 8.8, carbo: 58.7, grassi: 2.1 },
-  { nome: "Avocado", categoria: "Grassi", kcal: 160, prot: 2.0, carbo: 1.8, grassi: 14.7 },
-  { nome: "Broccoli lessati", categoria: "Verdura", kcal: 24, prot: 2.9, carbo: 2.6, grassi: 0.4 },
-  { nome: "Spinaci freschi / bolliti", categoria: "Verdura", kcal: 23, prot: 3.0, carbo: 2.9, grassi: 0.4 },
-  { nome: "Petto di pollo arrosto", categoria: "Proteine", kcal: 135, prot: 26.5, carbo: 0.0, grassi: 2.6 }
+  { nome: "Yogurt greco 0%", categoria: "Proteine", kcal: 57, prot: 10.3, carbo: 3.6, grassi: 0.4 }
 ];
 
 export function inizializzaAlimentiUI(onToggle, onEdit) {
@@ -39,55 +26,119 @@ export function inizializzaAlimentiUI(onToggle, onEdit) {
   // Gestione chiusura modale cliccando su Annulla
   document.getElementById('btnChiudiModalAlimento')?.addEventListener('click', chiudiModalAlimento);
 
-  // Listener per l'autocomplete sul campo nome alimento
+  // Listener per l'autocomplete sul campo nome alimento con ricerca asincrona (Open Food Facts + Locale)
   const inputNome = document.getElementById('alim_nome');
   if (inputNome) {
     inputNome.addEventListener('input', (e) => {
-      gestisciSuggerimenti(e.target.value);
+      const testo = e.target.value;
+      clearTimeout(debounceTimer);
+      
+      if (!testo || testo.trim().length < 2) {
+        nascondiSuggerimenti();
+        return;
+      }
+
+      // Debounce di 300ms per non sovraccaricare l'API mentre si digita
+      debounceTimer = setTimeout(() => {
+        cercaAlimentiGenerale(testo.trim());
+      }, 300);
     });
 
     // Chiudi i suggerimenti se si clicca fuori
     document.addEventListener('click', (e) => {
       const box = document.getElementById('suggerimentiAlimenti');
       if (box && !inputNome.contains(e.target) && !box.contains(e.target)) {
-        box.classList.add('hidden');
+        nascondiSuggerimenti();
       }
     });
   }
 }
 
-function gestisciSuggerimenti(testo) {
+async function cercaAlimentiGenerale(query) {
   const box = document.getElementById('suggerimentiAlimenti');
   if (!box) return;
 
-  const query = (testo || '').toLowerCase().trim();
-  if (query.length < 2) {
-    box.classList.add('hidden');
-    box.innerHTML = '';
-    return;
+  box.innerHTML = `<div class="p-2.5 text-xs text-gray-400 text-center flex items-center justify-center gap-2"><span>⏳</span> Ricerca in corso (database globale)...</div>`;
+  box.classList.remove('hidden');
+
+  let risultatiTrovati = [];
+
+  // 1. Cerca nel database locale di base
+  const matchBase = DATABASE_BASE.filter(item => item.nome.toLowerCase().includes(query.toLowerCase()));
+  matchBase.forEach(m => risultatiTrovati.push({ ...m, fonte: 'Base Locale' }));
+
+  // 2. Interroga l'API pubblica di Open Food Facts (lingua italiana)
+  try {
+    const url = `https://it.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=6`;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data && data.products) {
+      data.products.forEach(p => {
+        const nut = p.nutriments || {};
+        // Prendi i valori per 100g (energia in kcal o kJ convertita)
+        let kcal = nut['energy-kcal_100g'] || nut['energy_100g'] ? Math.round(nut['energy-kcal_100g'] || (nut['energy_100g'] / 4.184)) : 0;
+        let prot = nut['proteins_100g'] || 0;
+        let carbo = nut['carbohydrates_100g'] || 0;
+        let grassi = nut['fat_100g'] || 0;
+
+        if (p.product_name && kcal > 0) {
+          // Evita duplicati esatti
+          if (!risultatiTrovati.some(r => r.nome.toLowerCase() === p.product_name.toLowerCase())) {
+            risultatiTrovati.push({
+              nome: p.brands ? `${p.product_name} (${p.brands})` : p.product_name,
+              categoria: assegnaCategoriaCasuale(p.categories_tags),
+              kcal: parseFloat(kcal.toFixed(1)),
+              prot: parseFloat(prot.toFixed(1)),
+              carbo: parseFloat(carbo.toFixed(1)),
+              grassi: parseFloat(grassi.toFixed(1)),
+              fonte: 'Open Food Facts'
+            });
+          }
+        }
+      });
+    }
+  } catch (err) {
+    console.warn("Impossibile contattare Open Food Facts:", err);
   }
 
-  const risultati = DATABASE_RIFERIMENTO.filter(item => 
-    item.nome.toLowerCase().includes(query)
-  );
+  mostraBoxSuggerimenti(risultatiTrovati);
+}
 
-  if (risultati.length === 0) {
-    box.classList.add('hidden');
-    box.innerHTML = '';
+function assegnaCategoriaCasuale(tags) {
+  if (!tags || !Array.isArray(tags)) return 'Generico';
+  const str = tags.join(' ').toLowerCase();
+  if (str.includes('protein') || str.includes('meat') || str.includes('fish') || str.includes('cheeses') || str.includes('eggs')) return 'Proteine';
+  if (str.includes('cereal') || str.includes('pasta') || str.includes('rice') || str.includes('bread') || str.includes('potatoes')) return 'Carboidrati';
+  if (str.includes('fat') || str.includes('oil') || str.includes('butter')) return 'Grassi';
+  if (str.includes('vegetable') || str.includes('tomatoes')) return 'Verdura';
+  if (str.includes('fruit')) return 'Frutta';
+  return 'Generico';
+}
+
+function mostraBoxSuggerimenti(lista) {
+  const box = document.getElementById('suggerimentiAlimenti');
+  if (!box) return;
+
+  if (!lista || lista.length === 0) {
+    box.innerHTML = `<div class="p-2.5 text-xs text-gray-400 text-center">Nessun alimento trovato. Inserisci i dati manualmente.</div>`;
+    box.classList.remove('hidden');
     return;
   }
 
   box.innerHTML = '';
-  risultati.forEach(item => {
+  lista.forEach(item => {
     const div = document.createElement('div');
-    div.className = 'p-2.5 hover:bg-emerald-50 cursor-pointer text-xs flex justify-between items-center transition';
+    div.className = 'p-2.5 hover:bg-emerald-50 cursor-pointer text-xs flex justify-between items-center transition border-b border-gray-50 last:border-none';
     div.innerHTML = `
-      <span class="font-semibold text-gray-800">${item.nome}</span>
-      <span class="text-gray-500 font-mono">${item.kcal} kcal | P:${item.prot}g C:${item.carbo}g G:${item.grassi}g</span>
+      <div class="flex-1 pr-2">
+        <span class="font-semibold text-gray-800 block">${item.nome}</span>
+        <span class="text-[10px] text-gray-400">${item.fonte} • Cat: ${item.categoria}</span>
+      </div>
+      <span class="text-gray-600 font-mono text-right whitespace-nowrap">🔥 ${item.kcal} kcal<br><span class="text-[10px] text-gray-400">P:${item.prot} | C:${item.carbo} | G:${item.grassi}</span></span>
     `;
 
     div.addEventListener('click', () => {
-      // Compila automaticamente i campi
       document.getElementById('alim_nome').value = item.nome;
       document.getElementById('alim_categoria').value = item.categoria;
       document.getElementById('alim_kcal').value = item.kcal;
@@ -95,13 +146,21 @@ function gestisciSuggerimenti(testo) {
       document.getElementById('alim_carbo').value = item.carbo;
       document.getElementById('alim_grassi').value = item.grassi;
 
-      box.classList.add('hidden');
+      nascondiSuggerimenti();
     });
 
     box.appendChild(div);
   });
 
   box.classList.remove('hidden');
+}
+
+function nascondiSuggerimenti() {
+  const box = document.getElementById('suggerimentiAlimenti');
+  if (box) {
+    box.classList.add('hidden');
+    box.innerHTML = '';
+  }
 }
 
 export function renderListaAlimenti(alimentiData, filtro = '') {
@@ -167,10 +226,9 @@ export function renderListaAlimenti(alimentiData, filtro = '') {
 export function apriModalAlimento(alim = null) {
   const modal = document.getElementById('modalAlimento');
   const titolo = document.getElementById('modalAlimentoTitolo');
-  const boxSuggerimenti = document.getElementById('suggerimentiAlimenti');
   if (!modal) return;
 
-  if (boxSuggerimenti) boxSuggerimenti.classList.add('hidden');
+  nascondiSuggerimenti();
   modal.classList.remove('hidden');
 
   if (alim) {
@@ -196,8 +254,7 @@ export function apriModalAlimento(alim = null) {
 
 export function chiudiModalAlimento() {
   document.getElementById('modalAlimento')?.classList.add('hidden');
-  const boxSuggerimenti = document.getElementById('suggerimentiAlimenti');
-  if (boxSuggerimenti) boxSuggerimenti.classList.add('hidden');
+  nascondiSuggerimenti();
 }
 
 export function leggiAlimentoForm() {
