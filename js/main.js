@@ -20,10 +20,10 @@ function collegaEventiUI() {
   document.getElementById('btnSyncCloud')?.addEventListener('click', sincronizzaConGitHub);
 
   document.getElementById('btnSalvaProfilo')?.addEventListener('click', salvaProfiloHandler);
-  ['prof_eta', 'prof_sesso', 'prof_altezza', 'prof_peso', 'prof_attivita', 'prof_obiettivo'].forEach(id => {
-    document.getElementById(id)?.addEventListener('change', aggiornaResocontoFabbisogno);
-    document.getElementById(id)?.addEventListener('input', aggiornaResocontoFabbisogno);
-  });
+  ['prof_eta', 'prof_sesso', 'prof_altezza', 'prof_peso', 'prof_grasso', 'prof_muscolo', 'prof_viscerale', 'prof_attivita', 'prof_obiettivo'].forEach(id => {
+  document.getElementById(id)?.addEventListener('change', aggiornaResocontoFabbisogno);
+  document.getElementById(id)?.addEventListener('input', aggiornaResocontoFabbisogno);
+});
 
   document.getElementById('btnNuovoAlimento')?.addEventListener('click', () => apriModalAlimento());
   document.getElementById('btnChiudiModalAlimento')?.addEventListener('click', chiudiModalAlimento);
