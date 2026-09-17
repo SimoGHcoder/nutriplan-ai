@@ -1,1 +1,32 @@
-
+[
+  {
+    "id": "cibo_001",
+    "nome": "Petto di Pollo (crudo)",
+    "categoria": "Proteine",
+    "unita": "g",
+    "calorie_100g": 110,
+    "proteine_100g": 23.0,
+    "carboidrati_100g": 0.0,
+    "grassi_100g": 1.2
+  },
+  {
+    "id": "cibo_002",
+    "nome": "Riso Basmati (crudo)",
+    "categoria": "Carboidrati",
+    "unita": "g",
+    "calorie_100g": 350,
+    "proteine_100g": 7.0,
+    "carboidrati_100g": 78.0,
+    "grassi_100g": 0.8
+  },
+  {
+    "id": "cibo_003",
+    "nome": "Olio Extravergine d'Oliva",
+    "categoria": "Grassi",
+    "unita": "g",
+    "calorie_100g": 884,
+    "proteine_100g": 0.0,
+    "carboidrati_100g": 0.0,
+    "grassi_100g": 100.0
+  }
+]
