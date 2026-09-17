@@ -5,9 +5,10 @@
     "categoria": "Proteine",
     "unita": "g",
     "calorie_100g": 110,
-    "proteine_100g": 23.0,
-    "carboidrati_100g": 0.0,
-    "grassi_100g": 1.2
+    "proteine_100g": 23,
+    "carboidrati_100g": 0,
+    "grassi_100g": 1.2,
+    "attivo": false
   },
   {
     "id": "cibo_002",
@@ -15,8 +16,8 @@
     "categoria": "Carboidrati",
     "unita": "g",
     "calorie_100g": 350,
-    "proteine_100g": 7.0,
-    "carboidrati_100g": 78.0,
+    "proteine_100g": 7,
+    "carboidrati_100g": 78,
     "grassi_100g": 0.8
   },
   {
@@ -25,8 +26,8 @@
     "categoria": "Grassi",
     "unita": "g",
     "calorie_100g": 884,
-    "proteine_100g": 0.0,
-    "carboidrati_100g": 0.0,
-    "grassi_100g": 100.0
+    "proteine_100g": 0,
+    "carboidrati_100g": 0,
+    "grassi_100g": 100
   }
 ]
