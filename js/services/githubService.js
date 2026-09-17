@@ -1,19 +1,40 @@
 // js/services/githubService.js
 
+// Repository fisso condiviso
+const REPO_NAME = "pwa-nutrizionista";
+
 export function getConfigGH() {
   return {
     token: localStorage.getItem('gh_token') || '',
-    username: localStorage.getItem('gh_username') || '',
-    repo: localStorage.getItem('gh_repo') || '',
     profiloId: localStorage.getItem('gh_profilo_id') || 'default'
   };
 }
 
+// Funzione per ricavare automaticamente lo username GitHub associato al token
+async function getUsernameFromToken(token) {
+  try {
+    const res = await fetch('https://api.github.com/user', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.login; // Ritorna il nome utente esatto di GitHub
+  } catch (e) {
+    return null;
+  }
+}
+
 export async function caricaFileDaGitHub(pathFile) {
   const cfg = getConfigGH();
-  if (!cfg.token || !cfg.username || !cfg.repo) return null;
+  if (!cfg.token) return null;
 
-  const url = `https://api.github.com/repos/${cfg.username}/${cfg.repo}/contents/${pathFile}`;
+  const username = await getUsernameFromToken(cfg.token);
+  if (!username) return null;
+
+  const url = `https://api.github.com/repos/${username}/${REPO_NAME}/contents/${pathFile}`;
   try {
     const res = await fetch(url, {
       headers: {
@@ -34,14 +55,18 @@ export async function caricaFileDaGitHub(pathFile) {
 
 export async function salvaFileSuGitHub(pathFile, jsonObject, messaggioCommit) {
   const cfg = getConfigGH();
-  if (!cfg.token || !cfg.username || !cfg.repo) {
-    throw new Error('Configurazione GitHub mancante nelle impostazioni.');
+  if (!cfg.token) {
+    throw new Error('Token GitHub mancante nelle impostazioni.');
   }
 
-  const url = `https://api.github.com/repos/${cfg.username}/${cfg.repo}/contents/${pathFile}`;
+  const username = await getUsernameFromToken(cfg.token);
+  if (!username) {
+    throw new Error('Token GitHub non valido o scaduto.');
+  }
+
+  const url = `https://api.github.com/repos/${username}/${REPO_NAME}/contents/${pathFile}`;
   let sha = null;
 
-  // 1. Ottieni lo sha corrente del file (necessario per l'update su GitHub)
   try {
     const resGet = await fetch(url, {
       headers: {
@@ -54,10 +79,9 @@ export async function salvaFileSuGitHub(pathFile, jsonObject, messaggioCommit) {
       sha = fileData.sha;
     }
   } catch (e) {
-    // File non esiste ancora, verrà creato ex novo
+    // File non esiste, verrà creato
   }
 
-  // 2. Prepara il payload in base64
   const contentString = JSON.stringify(jsonObject, null, 2);
   const contentBase64 = btoa(unescape(encodeURIComponent(contentString)));
 
@@ -67,7 +91,6 @@ export async function salvaFileSuGitHub(pathFile, jsonObject, messaggioCommit) {
   };
   if (sha) bodyData.sha = sha;
 
-  // 3. Esegui la chiamata PUT
   const resPut = await fetch(url, {
     method: 'PUT',
     headers: {
