@@ -1,23 +1,110 @@
 {
   "profilo": {
-    "eta": 36,
+    "eta": 28,
     "sesso": "m",
-    "altezza_cm": 171,
-    "peso_kg": 76,
+    "altezza_cm": 178,
+    "peso_kg": 75,
     "livello_attivita": 1.375,
-    "obiettivo": "ipocalorica"
+    "obiettivo": "mantenimento"
   },
   "progressi": [
     {
       "data": "2026-09-17",
       "peso_kg": 75,
       "note": "Inizio percorso"
-    },
-    {
-      "data": "2026-09-17",
-      "peso_kg": 76,
-      "note": "Aggiornamento profilo"
     }
   ],
-  "piano_corrente": null
+  "piano_corrente": {
+    "data_creazione": "2026-09-17",
+    "target_totale": {
+      "bmr": 1727.5,
+      "tdee": 2375,
+      "targetKcal": 2375,
+      "protGrams": 150,
+      "carboGrams": 291,
+      "grassiGrams": 68
+    },
+    "pasti": [
+      {
+        "pasto": "Colazione",
+        "target_kcal": 475,
+        "alimenti": [
+          {
+            "nome": "Petto di Pollo (crudo)",
+            "grammi": 173,
+            "kcal": 190
+          },
+          {
+            "nome": "Riso Basmati (crudo)",
+            "grammi": 81,
+            "kcal": 284
+          }
+        ]
+      },
+      {
+        "pasto": "Spuntino Mattina",
+        "target_kcal": 238,
+        "alimenti": [
+          {
+            "nome": "Petto di Pollo (crudo)",
+            "grammi": 86,
+            "kcal": 95
+          },
+          {
+            "nome": "Riso Basmati (crudo)",
+            "grammi": 41,
+            "kcal": 144
+          }
+        ]
+      },
+      {
+        "pasto": "Pranzo",
+        "target_kcal": 831,
+        "alimenti": [
+          {
+            "nome": "Petto di Pollo (crudo)",
+            "grammi": 302,
+            "kcal": 332
+          },
+          {
+            "nome": "Riso Basmati (crudo)",
+            "grammi": 143,
+            "kcal": 501
+          }
+        ]
+      },
+      {
+        "pasto": "Spuntino Pomeriggio",
+        "target_kcal": 238,
+        "alimenti": [
+          {
+            "nome": "Petto di Pollo (crudo)",
+            "grammi": 86,
+            "kcal": 95
+          },
+          {
+            "nome": "Riso Basmati (crudo)",
+            "grammi": 41,
+            "kcal": 144
+          }
+        ]
+      },
+      {
+        "pasto": "Cena",
+        "target_kcal": 594,
+        "alimenti": [
+          {
+            "nome": "Petto di Pollo (crudo)",
+            "grammi": 216,
+            "kcal": 238
+          },
+          {
+            "nome": "Riso Basmati (crudo)",
+            "grammi": 102,
+            "kcal": 357
+          }
+        ]
+      }
+    ]
+  }
 }
