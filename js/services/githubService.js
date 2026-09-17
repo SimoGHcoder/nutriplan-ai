@@ -124,3 +124,37 @@ export async function salvaFileSuGitHub(pathFile, jsonObject, messaggioCommit) {
   console.log(`File ${pathFile} salvato con successo su GitHub!`, resultData);
   return resultData;
 }
+
+// Aggiungi questa funzione in js/services/githubService.js
+
+export async function elencaProfiliGitHub() {
+  const cfg = getConfigGH();
+  if (!cfg.token) return [];
+
+  const username = await getUsernameFromToken(cfg.token);
+  if (!username) return [];
+
+  const url = `https://api.github.com/repos/${username}/${REPO_NAME}/contents/data`;
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${cfg.token}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+
+    if (!res.ok) return [];
+    const files = await res.json();
+
+    // Filtra i file che iniziano con "utente_" e terminano con ".json"
+    // Estrae il nome del profilo (es. "utente_simone.json" -> "simone")
+    const profili = files
+      .filter(file => file.name.startsWith('utente_') && file.name.endsWith('.json'))
+      .map(file => file.name.replace('utente_', '').replace('.json', ''));
+
+    return profili;
+  } catch (err) {
+    console.warn("Impossibile elencare i profili da GitHub:", err);
+    return [];
+  }
+}
