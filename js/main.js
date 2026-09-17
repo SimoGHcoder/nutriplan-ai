@@ -23,7 +23,7 @@ async function sincronizzaConGitHub() {
   if (syncIcon) syncIcon.classList.add('animate-spin');
 
   const configGH = getConfigGH();
-  if (configGH.token && configGH.username && configGH.repo) {
+  if (configGH.token) {
     try {
       const percorsoFileUtente = `data/utente_${configGH.profiloId}.json`;
       const [alimentiCloud, utenteCloud] = await Promise.all([
@@ -89,22 +89,30 @@ function collegaEventiUI() {
     alert('Sincronizzazione completata!');
   });
 
-  // Salvataggio Configurazione GitHub e avvio immediato sincronizzazione
-  document.getElementById('btnSalvaConfig')?.addEventListener('click', async () => {
-    const token = document.getElementById('cfg_token').value.trim();
-    const username = document.getElementById('cfg_username').value.trim();
-    const repo = document.getElementById('cfg_repo').value.trim();
-    const profiloId = document.getElementById('cfg_profilo_id').value.trim() || 'default';
+  // Salvataggio Configurazione Cloud (Token e Profilo ID)
+  const btnSalvaConfig = document.getElementById('btnSalvaConfig');
+  if (btnSalvaConfig) {
+    btnSalvaConfig.addEventListener('click', async () => {
+      const tokenInput = document.getElementById('cfg_token');
+      const profiloInput = document.getElementById('cfg_profilo_id');
 
-    localStorage.setItem('gh_token', token);
-    localStorage.setItem('gh_username', username);
-    localStorage.setItem('gh_repo', repo);
-    localStorage.setItem('gh_profilo_id', profiloId);
+      const token = tokenInput ? tokenInput.value.trim() : '';
+      const profiloId = profiloInput ? profiloInput.value.trim() : 'default';
 
-    document.getElementById('modalConfig')?.classList.add('hidden');
+      if (!token) {
+        alert('Inserisci un token GitHub valido.');
+        return;
+      }
 
-    // Sincronizza subito con le nuove credenziali inserite
-    await sincronizzaConGitHub();
-    alert('Configurazione salvata e profilo caricato correttamente!');
-  });
+      localStorage.setItem('gh_token', token);
+      localStorage.setItem('gh_profilo_id', profiloId || 'default');
+
+      // Chiudi il modale
+      document.getElementById('modalConfig')?.classList.add('hidden');
+
+      // Avvia la sincronizzazione con le nuove credenziali
+      await sincronizzaConGitHub();
+      alert('Configurazione salvata e profilo sincronizzato con successo!');
+    });
+  }
 }
