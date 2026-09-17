@@ -5,13 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PWA Nutrizionista</title>
   
-  <!-- Favicon SVG dinamica per evitare il 404 in console -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥗</text></svg>">
-  
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#059669">
   
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col font-sans">
@@ -26,13 +23,12 @@
         <button id="btnSyncCloud" title="Sincronizza Cloud" class="p-2 hover:bg-emerald-700 rounded-lg transition">
           <span id="syncIcon" class="block">🔄</span>
         </button>
-        <button id="btnSettings" title="Impostazioni GitHub" class="p-2 hover:bg-emerald-700 rounded-lg transition">
+        <button id="btnSettings" title="Impostazioni Cloud" class="p-2 hover:bg-emerald-700 rounded-lg transition">
           ⚙️
         </button>
       </div>
     </div>
     
-    <!-- Tab Navigazione -->
     <nav class="max-w-4xl mx-auto px-2 flex border-t border-emerald-500/40 text-sm">
       <button data-target="sec-profilo" class="nav-tab flex-1 py-2.5 text-center font-medium border-b-2 border-white bg-emerald-700 text-white transition">
         👤 Profilo
@@ -46,7 +42,6 @@
     </nav>
   </header>
 
-  <!-- Contenuto Principale -->
   <main class="max-w-4xl w-full mx-auto p-4 flex-1">
 
     <!-- SEZIONE PROFILO -->
@@ -57,7 +52,6 @@
         </h2>
 
         <form id="formProfilo" onsubmit="event.preventDefault();" class="space-y-6">
-          <!-- Dati Generali -->
           <div>
             <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Dati Generali</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -83,7 +77,6 @@
             </div>
           </div>
 
-          <!-- Dati Bilancia BIA -->
           <div class="pt-4 border-t border-gray-100">
             <div class="flex items-center justify-between mb-3">
               <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Parametri BIA / Bilancia BMR</h3>
@@ -109,7 +102,6 @@
             </div>
           </div>
 
-          <!-- Attività e Obiettivi -->
           <div class="pt-4 border-t border-gray-100">
             <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Stile di Vita e Obiettivo</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -135,7 +127,6 @@
             </div>
           </div>
 
-          <!-- Resoconto Calcolato -->
           <div class="pt-4 border-t border-gray-100">
             <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Fabbisogno Calcolatometrico</h3>
             <div id="resocontoFabbisogno"></div>
@@ -161,11 +152,9 @@
             <span>➕</span> Nuovo Alimento
           </button>
         </div>
-
         <div class="mb-4">
           <input type="text" id="cercaAlimentoInput" placeholder="Cerca alimento per nome o categoria..." class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
         </div>
-
         <div id="listaAlimentiContainer" class="divide-y divide-gray-100"></div>
       </div>
     </section>
@@ -181,18 +170,17 @@
             <span>⚡</span> Genera Nuovo Piano
           </button>
         </div>
-
         <div id="pianoAlimentareContainer"></div>
       </div>
     </section>
 
-    <!-- MODALE CONFIGURAZIONE GITHUB -->
+    <!-- MODALE CONFIGURAZIONE CLOUD -->
     <div id="modalConfig" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
       <div class="bg-white w-full max-w-md rounded-xl p-6 shadow-xl space-y-4">
         <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-          <span>⚙️</span> Impostazioni Sync GitHub
+          <span>⚙️</span> Configurazione Cloud
         </h3>
-        <p class="text-xs text-gray-500">Configura il token e l'ID profilo per caricare il file utente dedicato (es. utente_simone.json).</p>
+        <p class="text-xs text-gray-500">Inserisci il tuo token GitHub per l'autenticazione e seleziona il profilo utente da caricare.</p>
         
         <div class="space-y-3">
           <div>
@@ -200,17 +188,9 @@
             <input type="password" id="cfg_token" placeholder="ghp_xxxxxxxxxxxx" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-700 mb-1">Username GitHub</label>
-            <input type="text" id="cfg_username" placeholder="Es. MarioRossi" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-700 mb-1">Nome Repository</label>
-            <input type="text" id="cfg_repo" placeholder="pwa-nutrizionista" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
-          </div>
-          <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">ID Profilo (Nome File Cloud)</label>
             <input type="text" id="cfg_profilo_id" placeholder="Es. simone" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
-            <p class="text-[10px] text-gray-500 mt-0.5">Verrà usato il file: <code id="lblNomeFilePreview" class="text-emerald-700 font-mono">data/utente_default.json</code></p>
+            <p class="text-[10px] text-gray-500 mt-0.5">File associato: <code id="lblNomeFilePreview" class="text-emerald-700 font-mono">data/utente_default.json</code></p>
           </div>
         </div>
 
@@ -221,57 +201,8 @@
       </div>
     </div>
 
-    <!-- MODALE AGGIUNGI/MODIFICA ALIMENTO -->
-    <div id="modalAlimento" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-      <div class="bg-white w-full max-w-lg rounded-xl p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
-        <h3 id="modalAlimentoTitolo" class="text-lg font-bold text-gray-800">Nuovo Alimento</h3>
-        <form id="formAlimento" onsubmit="event.preventDefault();" class="space-y-4">
-          <input type="hidden" id="alim_id">
-          <div>
-            <label class="block text-xs font-medium text-gray-700 mb-1">Nome Alimento</label>
-            <input type="text" id="alim_nome" required class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-medium text-gray-700 mb-1">Categoria</label>
-              <select id="alim_categoria" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
-                <option value="proteine">Proteine</option>
-                <option value="carboidrati">Carboidrati</option>
-                <option value="grassi">Grassi</option>
-                <option value="verdure">Verdure/Fibre</option>
-                <option value="frutta">Frutta</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-700 mb-1">Calorie per 100g</label>
-              <input type="number" id="alim_kcal" required class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
-            </div>
-          </div>
-          <div class="grid grid-cols-3 gap-3">
-            <div>
-              <label class="block text-xs font-medium text-gray-700 mb-1">Proteine (g)</label>
-              <input type="number" step="0.1" id="alim_prot" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-700 mb-1">Carbo (g)</label>
-              <input type="number" step="0.1" id="alim_carbo" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-700 mb-1">Grassi (g)</label>
-              <input type="number" step="0.1" id="alim_grassi" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
-            </div>
-          </div>
-          <div class="flex justify-end gap-2 pt-2">
-            <button type="button" id="btnChiudiModalAlimento" class="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition">Annulla</button>
-            <button type="button" id="btnSalvaAlimento" class="px-4 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition">Salva Alimento</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
   </main>
 
-  <!-- Entry Point Javascript Module -->
   <script type="module" src="./js/main.js"></script>
 </body>
 </html>
