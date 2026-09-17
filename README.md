@@ -1,44 +1,39 @@
-# 🥗 PWA Nutrizionista
+# Nutriplan AI 🥗🤖
 
-https://simoghcoder.github.io/pwa-nutrizionista/
+**Nutriplan AI** è una Progressive Web App (PWA) moderna, open-source e orientata alla privacy, progettata per fungere da nutrizionista digitale personale. Combina il tracciamento biometrico avanzato con la generazione intelligente di piani alimentari mirati ai tuoi obiettivi fisici.
 
-Una Progressive Web App (PWA) moderna, leggera e orientata alla privacy per la gestione personalizzata dei piani alimentari, del fabbisogno calorico avanzato e del database degli alimenti, con sincronizzazione diretta su GitHub.
-
-## ✨ Caratteristiche Principali
-
-* **Profilo Avanzato & Parametri BIA:** Calcolo preciso del metabolismo basale (BMR) e del TDEE integrando i dati della bilancia impedenziometrica (Percentuale di grasso corporeo, Massa magra/muscolare, Grasso viscerale).
-* **Formula Katch-McArdle:** Attivazione automatica della formula basata sulla massa magra quando viene inserita la percentuale di grasso corporeo, per una precisione millimetrica.
-* **Database Alimenti & Categorie:** Gestione completa degli alimenti suddivisi per macro-categorie con ricerca in tempo reale.
-* **Piani Alimentari Personalizzati:** Generazione e visualizzazione del piano calorico/nutrizionale mirato in base agli obiettivi (dimagrimento, mantenimento o massa).
-* **Multi-Profilo Cloud (GitHub Sync):** Condividi lo stesso token e database alimenti su GitHub, salvando i dati di ogni utente su file dedicati (es. `data/utente_simone.json`).
-* **Offline-First / PWA:** Installabile su smartphone e PC, progettata per funzionare in modo reattivo.
+👉 **[Accedi a Nutriplan AI (Versione Live)](https://nutriplan-ai.vercel.app)**
 
 ---
 
-## 🚀 Configurazione e Utilizzo
+## 🏛️ Architettura e Privacy (Zero-Server Architecture)
 
-1. Apri l'applicazione nel browser.
-2. Clicca sull'icona delle impostazioni (**⚙️**) in alto a destra.
-3. Inserisci le tue credenziali GitHub:
-   * **Personal Access Token** (con permessi di lettura/scrittura sui contenuti del repo).
-   * **Username GitHub** e **Nome Repository**.
-   * **ID Profilo** (es. `simone` o `laura`), che determinerà il file sul cloud (`data/utente_simone.json`).
-4. Clicca su **Salva e Sincronizza**: l'app caricherà immediatamente i tuoi dati salvati sul cloud!
+Nutriplan AI adotta un modello architetturale sicuro e decentralizzato:
+* **Codice Aperto:** Il frontend e la logica dell'applicazione sono open-source e ospitati pubblicamente.
+* **Dati Isolati:** A differenza delle tradizionali piattaforme centralizzate, **i tuoi dati personali, metriche e piani alimentari non transitano su alcun server di terze parti**. Vengono sincronizzati esclusivamente all'interno di uno spazio sicuro e privato associato al tuo account.
+* **Portabilità Totale:** Essendo una PWA, puoi installarla istantaneamente su qualsiasi dispositivo (Smartphone, Tablet, PC) mantenendo un'esperienza fluida, nativa e reattiva.
 
 ---
 
-## 🛠️ Struttura del Progetto
+## ✨ Funzionalità Principali
 
-```text
-├── index.html              # Interfaccia principale e modali
-├── manifest.json           # Manifest PWA
-├── data/
-│   ├── alimenti.json       # Database alimenti condiviso
-│   └── utente_[id].json    # File profilo e piano specifico per utente
-└── js/
-    ├── main.js             # Entry point e coordinamento eventi
-    ├── services/
-    │   └── githubService.js # Comunicazione con le API di GitHub
-    └── ui/
-        ├── navigation.js   # Gestione tab e modali
-        └── profiloUI.js    # Form profilo, logica BIA e formule BMR
+* **Tracciamento Biometrico:** Monitoraggio costante di parametri corporei e metriche di progresso.
+* **Piani Alimentari Mirati:** Creazione e gestione di regimi nutrizionali personalizzati in base agli obiettivi specifici.
+* **Assistenza Intelligente:** Elaborazione dei dati orientata ai risultati, concepita per simulare l'approccio di un consulente nutrizionale dedicato.
+* **PWA Ready:** Funziona offline, si installa con un tap sulla schermata Home e si aggiorna automaticamente.
+
+---
+
+## 🚀 Come iniziare (Deploy autonomo)
+
+Vuoi una tua istanza personale di Nutriplan AI o contribuire al codice?
+
+1. **Usa il Template:** Clicca sul pulsante verde **"Use this template"** in cima a questa pagina per clonare la repository sul tuo account GitHub.
+2. **Collega a Vercel:** Importa la tua nuova repository su [Vercel](https://vercel.com/) con un click per ottenere il tuo link universale personale.
+3. **Autenticazione:** Accedi tramite il tuo account per collegare la PWA al tuo spazio dati sicuro.
+
+---
+
+## 📄 Licenza
+
+Distribuito sotto licenza [MIT](LICENSE). Sentiti libero di forkare il progetto, personalizzarlo e adattarlo alle tue esigenze.
