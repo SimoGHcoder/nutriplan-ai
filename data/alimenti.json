@@ -39,5 +39,15 @@
     "carboidrati_100g": 0,
     "grassi_100g": 1.2,
     "attivo": false
+  },
+  {
+    "id": "cibo_1789667192322",
+    "nome": "Riso Integrale",
+    "categoria": "Carboidrati",
+    "calorie_100g": 337,
+    "proteine_100g": 7.5,
+    "carboidrati_100g": 74,
+    "grassi_100g": 2.2,
+    "attivo": true
   }
 ]
