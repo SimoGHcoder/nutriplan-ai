@@ -1,3 +1,41 @@
+// GESTIONE MODALE IMPOSTAZIONI API
+function openConfigModal() {
+  const modal = document.getElementById('configModal');
+  if (modal) {
+    caricaConfigInModal();
+    modal.classList.remove('hidden');
+  } else {
+    console.error("Modale #configModal non trovata nel DOM.");
+  }
+}
+
+function closeConfigModal() {
+  const modal = document.getElementById('configModal');
+  if (modal) {
+    modal.classList.add('hidden');
+  }
+}
+
+function caricaConfigInModal() {
+  const configGH = JSON.parse(localStorage.getItem('nutri_pwa_gh')) || {};
+  document.getElementById('ghUsername').value = configGH.username || '';
+  document.getElementById('ghRepo').value = configGH.repo || 'pwa-nutrizionista';
+  document.getElementById('ghToken').value = configGH.token || '';
+}
+
+function salvaConfigurazioneGH() {
+  const configGH = {
+    username: document.getElementById('ghUsername').value.trim(),
+    repo: document.getElementById('ghRepo').value.trim(),
+    token: document.getElementById('ghToken').value.trim()
+  };
+  localStorage.setItem('nutri_pwa_gh', JSON.stringify(configGH));
+  closeConfigModal();
+  alert("Credenziali salvate nel browser!");
+  if (typeof inizializzaDati === 'function') {
+    inizializzaDati();
+  }
+}
 // Registrazione Service Worker per PWA
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js')
