@@ -54,7 +54,6 @@ async function cercaAlimentiGenerale(query) {
   let risultatiTrovati = [];
 
   try {
-    // Chiamata online all'API di Open Food Facts con page_size elevato per trovare varianti (integrale, venere, ecc.)
     const url = `https://it.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=30`;
     const response = await fetch(url);
     const data = await response.json();
@@ -77,11 +76,9 @@ async function cercaAlimentiGenerale(query) {
             nomePuro = nomePuro.replace(regexMarca, '').trim();
           }
 
-          // Pulisce simboli residui o trattini isolati
-          nomePuro = nomePuro.replace(/^[-,\s]+|[-,\s]+$/g, '').trim();
+          nomePuro = nomePuro.replace(/^[-,\s]+|[-,\s]+$/, '').trim();
           if (!nomePuro) nomePuro = p.product_name;
 
-          // Normalizza ed evita duplicati esatti nella lista dei suggerimenti
           const nomeNormalizzato = nomePuro.toLowerCase();
           if (!risultatiTrovati.some(r => r.nome.toLowerCase() === nomeNormalizzato)) {
             const isUova = nomeNormalizzato.includes('uov');
@@ -145,7 +142,6 @@ function mostraBoxSuggerimenti(lista) {
 
   box.classList.remove('hidden');
 
-  // Associa l'evento di selezione sui singoli suggerimenti
   box.querySelectorAll('div[data-index]').forEach(el => {
     el.addEventListener('click', () => {
       const idx = parseInt(el.getAttribute('data-index'));
@@ -160,7 +156,6 @@ function applicaAlimentoSelezionato(item) {
   document.getElementById('alimento_categoria').value = item.categoria;
   document.getElementById('alimento_unita').value = item.unita_misura;
   document.getElementById('alimento_peso_unita').value = item.peso_unita;
-  document.getElementById('alimento_ kcal').value = item.calorie_100g; // Nota: verificare l'ID esatto nel DOM se diverso
   document.getElementById('alimento_calorie').value = item.calorie_100g;
   document.getElementById('alimento_proteine').value = item.proteine_100g;
   document.getElementById('alimento_carboidrati').value = item.carboidrati_100g;
@@ -190,7 +185,7 @@ export function renderListaAlimenti(alimentiData, filtro = '') {
   }
 
   container.innerHTML = alimentiFiltrati.map(alimento => {
-    const isAttivo = alimento.attivo !== false; // Di default attivo se non specificato
+    const isAttivo = alimento.attivo !== false;
     return `
       <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between transition-all hover:shadow-md ${!isAttivo ? 'opacity-50 grayscale' : ''}">
         <div>
@@ -240,7 +235,6 @@ export function renderListaAlimenti(alimentiData, filtro = '') {
     `;
   }).join('');
 
-  // Espone globalmente le funzioni per i listener inline creati nei template string
   window.toggleStatoAlimento = callbackToggleStato;
   window.apriModaleModificaAlimento = callbackModificaAlimento;
 }
@@ -262,7 +256,6 @@ export function apriModalAlimento(alimento = null) {
   const titolo = document.getElementById('modalAlimentoTitolo');
   if (!modal) return;
 
-  // Reset del form
   document.getElementById('formAlimento')?.reset();
   document.getElementById('alimento_id').value = alimento ? alimento.id : 'cibo_' + Date.now();
 
