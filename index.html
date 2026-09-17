@@ -9,14 +9,38 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen pb-12 font-sans">
 
-  <header class="bg-slate-800 border-b border-slate-700 p-4 sticky top-0 z-50">
-    <div class="max-w-2xl mx-auto flex justify-between items-center">
-      <h1 class="text-xl font-bold text-emerald-400">🥗 NutriPWA</h1>
-      <button onclick="toggleConfigModal()" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg border border-slate-600">
-        ⚙️ Impostazioni API
-      </button>
+  <!-- HEADER -->
+<header class="bg-slate-800 border-b border-slate-700 p-4 sticky top-0 z-50">
+  <div class="max-w-2xl mx-auto flex justify-between items-center">
+    <h1 class="text-xl font-bold text-emerald-400">🥗 NutriPWA</h1>
+    <button type="button" onclick="openConfigModal()" class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg border border-slate-600">
+      ⚙️ Impostazioni API
+    </button>
+  </div>
+</header>
+
+<!-- MODALE CONFIGURAZIONE CREDENZIALI GITHUB -->
+<div id="configModal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 hidden">
+  <div class="bg-slate-800 p-6 rounded-2xl max-w-md w-full border border-slate-700 space-y-4">
+    <h3 class="text-lg font-bold text-white">Configurazione GitHub API</h3>
+    <div>
+      <label class="block text-xs text-slate-400 mb-1">Username GitHub</label>
+      <input type="text" id="ghUsername" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-sm">
     </div>
-  </header>
+    <div>
+      <label class="block text-xs text-slate-400 mb-1">Nome Repository</label>
+      <input type="text" id="ghRepo" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-sm" value="pwa-nutrizionista">
+    </div>
+    <div>
+      <label class="block text-xs text-slate-400 mb-1">Personal Access Token (PAT)</label>
+      <input type="password" id="ghToken" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-sm">
+    </div>
+    <div class="flex justify-end space-x-2">
+      <button type="button" onclick="closeConfigModal()" class="px-4 py-2 bg-slate-700 rounded-lg text-sm text-slate-200">Annulla</button>
+      <button type="button" onclick="salvaConfigurazioneGH()" class="px-4 py-2 bg-emerald-600 rounded-lg text-sm text-white">Salva Token</button>
+    </div>
+  </div>
+</div>
 
   <main class="max-w-2xl mx-auto p-4 space-y-6">
 
