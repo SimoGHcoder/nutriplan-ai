@@ -4,18 +4,15 @@ export function inizializzaNavigazione() {
   // Gestione tab principali
   const tabs = document.querySelectorAll('.nav-tab');
   tabs.forEach(tab => {
-    tab.addEventListener('click', (e) => {
+    tab.addEventListener('click', () => {
       const targetId = tab.getAttribute('data-target');
       
-      // Nascondi tutte le sezioni
       document.querySelectorAll('main > section').forEach(sec => {
         sec.classList.add('hidden');
       });
       
-      // Mostra la sezione selezionata
       document.getElementById(targetId)?.classList.remove('hidden');
       
-      // Aggiorna lo stile attivo delle tab
       tabs.forEach(t => {
         t.classList.remove('border-white', 'bg-emerald-700', 'text-white');
         t.classList.add('border-transparent', 'text-emerald-100');
@@ -25,12 +22,28 @@ export function inizializzaNavigazione() {
     });
   });
 
-  // Gestione Modale Impostazioni (Tasto Ingranaggio ⚙️)
+  // Gestione Modale Impostazioni
   const btnSettings = document.getElementById('btnSettings');
   const modalConfig = document.getElementById('modalConfig');
   const btnChiudiConfig = document.getElementById('btnChiudiConfig');
+  const inputProfiloId = document.getElementById('cfg_profilo_id');
+  const lblPreview = document.getElementById('lblNomeFilePreview');
+
+  const aggiornaAnteprimaFile = () => {
+    const id = inputProfiloId?.value.trim() || 'default';
+    if (lblPreview) lblPreview.textContent = `data/utente_${id}.json`;
+  };
+
+  inputProfiloId?.addEventListener('input', aggiornaAnteprimaFile);
 
   btnSettings?.addEventListener('click', () => {
+    // Carica i dati salvati nel form impostazioni se esistono
+    if (document.getElementById('cfg_token')) document.getElementById('cfg_token').value = localStorage.getItem('gh_token') || '';
+    if (document.getElementById('cfg_username')) document.getElementById('cfg_username').value = localStorage.getItem('gh_username') || '';
+    if (document.getElementById('cfg_repo')) document.getElementById('cfg_repo').value = localStorage.getItem('gh_repo') || '';
+    if (inputProfiloId) inputProfiloId.value = localStorage.getItem('gh_profilo_id') || 'default';
+    
+    aggiornaAnteprimaFile();
     modalConfig?.classList.remove('hidden');
   });
 
@@ -38,7 +51,6 @@ export function inizializzaNavigazione() {
     modalConfig?.classList.add('hidden');
   });
 
-  // Chiudi modale cliccando sullo sfondo scuro
   modalConfig?.addEventListener('click', (e) => {
     if (e.target === modalConfig) {
       modalConfig.classList.add('hidden');
