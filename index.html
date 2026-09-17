@@ -20,29 +20,30 @@
 </header>
 
 <!-- MODALE CONFIGURAZIONE CREDENZIALI GITHUB -->
-<div id="configModal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 hidden">
-  <div class="bg-slate-800 p-6 rounded-2xl max-w-md w-full border border-slate-700 space-y-4">
-    <h3 class="text-lg font-bold text-white">Configurazione GitHub API</h3>
+<div id="configModal" class="fixed inset-0 bg-slate-950/90 flex items-center justify-center p-4 z-[9999] hidden">
+  <div class="bg-slate-800 p-6 rounded-2xl max-w-md w-full border border-slate-700 space-y-4 shadow-2xl">
+    <h3 class="text-lg font-bold text-white flex items-center gap-2">⚙️ Configurazione GitHub API</h3>
+    
     <div>
-      <label class="block text-xs text-slate-400 mb-1">Username GitHub</label>
-      <input type="text" id="ghUsername" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-sm">
+      <label class="block text-xs text-slate-400 mb-1 font-medium">Username GitHub</label>
+      <input type="text" id="ghUsername" placeholder="es. MarioRossi" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:border-emerald-500">
     </div>
     <div>
-      <label class="block text-xs text-slate-400 mb-1">Nome Repository</label>
-      <input type="text" id="ghRepo" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-sm" value="pwa-nutrizionista">
+      <label class="block text-xs text-slate-400 mb-1 font-medium">Nome Repository</label>
+      <input type="text" id="ghRepo" placeholder="pwa-nutrizionista" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:border-emerald-500">
     </div>
     <div>
-      <label class="block text-xs text-slate-400 mb-1">Personal Access Token (PAT)</label>
-      <input type="password" id="ghToken" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-sm">
+      <label class="block text-xs text-slate-400 mb-1 font-medium">Personal Access Token (PAT)</label>
+      <input type="text" id="ghToken" placeholder="github_pat_11A..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:border-emerald-500 font-mono">
+      <p class="text-[10px] text-slate-400 mt-1">Il token deve avere i permessi <b>Contents: Read & Write</b> sul repository.</p>
     </div>
-    <div class="flex justify-end space-x-2">
-      <button type="button" onclick="closeConfigModal()" class="px-4 py-2 bg-slate-700 rounded-lg text-sm text-slate-200">Annulla</button>
-      <button type="button" onclick="salvaConfigurazioneGH()" class="px-4 py-2 bg-emerald-600 rounded-lg text-sm text-white">Salva Token</button>
+
+    <div class="flex justify-end space-x-2 pt-2">
+      <button type="button" onclick="closeConfigModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm text-slate-200">Annulla</button>
+      <button type="button" onclick="salvaConfigurazioneGH()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm text-white font-medium">Salva Token</button>
     </div>
   </div>
 </div>
-
-  <main class="max-w-2xl mx-auto p-4 space-y-6">
 
     <!-- DASHBOARD CALCOLI NUTRIZIONALI -->
     <section class="bg-slate-800 p-5 rounded-2xl border border-slate-700">
