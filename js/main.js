@@ -232,9 +232,6 @@ function collegaEventiUI() {
     }
 
     // Controlla se l'alimento esiste già per ID (Modifica vs Inserimento)
-    const index = alimentiData.findIndex(a => a.id === nuuvoAlimentoIdMatch(nuovoAlimento.id));
-    
-    // Trova l'indice corretto confrontando l'id
     const existingIndex = alimentiData.findIndex(a => a.id === nuovoAlimento.id);
 
     if (existingIndex !== -1) {
@@ -242,6 +239,7 @@ function collegaEventiUI() {
       nuovoAlimento.attivo = alimentiData[existingIndex].attivo;
       alimentiData[existingIndex] = nuovoAlimento;
     } else {
+      nuovoAlimento.attivo = true;
       alimentiData.push(nuovoAlimento);
     }
 
@@ -257,17 +255,11 @@ function collegaEventiUI() {
     // Sincronizzazione Cloud su GitHub (data/alimenti.json)
     try {
       await salvaFileSuGitHub('data/alimenti.json', alimentiData, `Aggiornamento alimento: ${nuovoAlimento.nome}`);
-      // Feedback discreto o silenzioso per non interrompere il flusso
     } catch (err) {
       console.warn('Errore sync GitHub alimenti:', err);
       alert('Alimento salvato in locale. Errore di sincronizzazione con GitHub: ' + err.message);
     }
   });
-}
-
-// Funzione di supporto per ricavare l'id pulito se necessario
-function nuuvoAlimentoIdMatch(id) {
-  return id;
 }
 
 // Funzione di toggle attivazione/disattivazione alimento
