@@ -1,1 +1,18 @@
-
+{
+  "profilo": {
+    "eta": 28,
+    "sesso": "m",
+    "altezza_cm": 178,
+    "peso_kg": 75.0,
+    "livello_attivita": 1.375,
+    "obiettivo": "mantenimento"
+  },
+  "progressi": [
+    {
+      "data": "2026-09-17",
+      "peso_kg": 75.0,
+      "note": "Inizio percorso"
+    }
+  ],
+  "piano_corrente": null
+}
