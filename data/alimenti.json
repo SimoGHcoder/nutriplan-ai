@@ -49,5 +49,15 @@
     "carboidrati_100g": 74,
     "grassi_100g": 2.2,
     "attivo": true
+  },
+  {
+    "id": "cibo_1789667749121",
+    "nome": "Uova di gallina (intero)",
+    "categoria": "Proteine",
+    "calorie_100g": 128,
+    "proteine_100g": 12.4,
+    "carboidrati_100g": 0.1,
+    "grassi_100g": 8.7,
+    "attivo": true
   }
 ]
