@@ -1,0 +1,16 @@
+{
+  "profilo": {
+    "nome": "simone",
+    "eta": 36,
+    "sesso": "M",
+    "altezza": 171,
+    "peso": 76,
+    "grasso_perc": 26,
+    "muscolo_kg": 53,
+    "grasso_viscerale": 12,
+    "acqua_perc": null,
+    "livello_attivita": "sedentario",
+    "obiettivo": "dimagrimento_intenso"
+  },
+  "piano_alimentare": []
+}
