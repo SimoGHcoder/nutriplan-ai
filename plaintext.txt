@@ -1,0 +1,10 @@
+pwa-nutrizionista/
+│
+├── index.html               # Interfaccia Utente e Gestione PWA
+├── app.js                   # Logica dell'app, formule BMR/TDEE e sync GitHub API
+├── manifest.json            # Configurazione PWA per l'installazione su dispositivi
+├── sw.js                    # Service Worker per caching e supporto offline
+│
+└── data/
+    ├── alimenti.json        # Database cibi e macronutrienti
+    └── utente_data.json     # Profilo, storico pesate e piano nutrizionale
