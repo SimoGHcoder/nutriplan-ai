@@ -9,7 +9,6 @@ export function popolaUIProfilo(utenteData) {
   if (document.getElementById('prof_altezza')) document.getElementById('prof_altezza').value = p.altezza || '';
   if (document.getElementById('prof_peso')) document.getElementById('prof_peso').value = p.peso || '';
   
-  // Dati BIA / Bilancia intelligente
   if (document.getElementById('prof_grasso')) document.getElementById('prof_grasso').value = p.grasso_perc || '';
   if (document.getElementById('prof_muscolo')) document.getElementById('prof_muscolo').value = p.muscolo_kg || '';
   if (document.getElementById('prof_viscerale')) document.getElementById('prof_viscerale').value = p.grasso_viscerale || '';
@@ -43,13 +42,11 @@ export function calcolaFabbisogno(p) {
   let bmr = 0;
   let lbm = 0;
 
-  // Se abbiamo la % di grasso, usiamo Katch-McArdle (molto più precisa)
   if (p.grasso_perc && p.grasso_perc > 0 && p.grasso_perc < 60) {
     lbm = p.peso * (1 - p.grasso_perc / 100);
     bmr = 370 + (21.6 * lbm);
   } else {
-    // Altrimenti usiamo Mifflin-St Jeor standard
-    lbm = p.muscolo_kg || (p.peso * 0.75); // stima indicativa se manca la % grasso
+    lbm = p.muscolo_kg || (p.peso * 0.75);
     if (p.sesso === 'M') {
       bmr = (10 * p.peso) + (6.25 * p.altezza) - (5 * p.eta) + 5;
     } else {
@@ -57,7 +54,6 @@ export function calcolaFabbisogno(p) {
     }
   }
 
-  // Moltiplicatori LAF (Livello Attività Fisica)
   const lafMap = {
     sedentario: 1.2,
     leggero: 1.375,
@@ -68,7 +64,6 @@ export function calcolaFabbisogno(p) {
   const laf = lafMap[p.livello_attivita] || 1.2;
   const tdee = bmr * laf;
 
-  // Aggiustamento in base all'obiettivo
   let target = tdee;
   if (p.obiettivo === 'dimagrimento_leggero') target -= 300;
   if (p.obiettivo === 'dimagrimento_intenso') target -= 500;
