@@ -8,7 +8,7 @@
     "proteine_100g": 23,
     "carboidrati_100g": 0,
     "grassi_100g": 1.2,
-    "attivo": false
+    "attivo": true
   },
   {
     "id": "cibo_002",
