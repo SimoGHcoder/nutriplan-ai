@@ -1,98 +1,61 @@
 // js/ui/alimentiUI.js
 
-let callbackToggleAlimento = null;
-let callbackEditAlimento = null;
-let debounceTimer = null;
+let callbackToggleStato = null;
+let callbackModificaAlimento = null;
 
-// Database di base con esempi di peso variabile e peso fisso
-const DATABASE_BASE = [
-  { nome: "Uova intere", categoria: "Proteine", unita_misura: "pz", peso_unita: 60, calorie_100g: 128, proteine_100g: 12.4, carboidrati_100g: 0.1, grassi_100g: 8.7 },
-  { nome: "Albume d'uovo (liquido)", categoria: "Proteine", unita_misura: "g", peso_unita: 100, calorie_100g: 52, proteine_100g: 10.9, carboidrati_100g: 0.7, grassi_100g: 0.2 },
-  { nome: "Trancio di Salmone", categoria: "Proteine", unita_misura: "porzione", peso_unita: 150, calorie_100g: 185, proteine_100g: 18.4, carboidrati_100g: 0.0, grassi_100g: 12.0 },
-  { nome: "Riso Basmati", categoria: "Carboidrati", unita_misura: "g", peso_unita: 100, calorie_100g: 345, proteine_100g: 7.0, carboidrati_100g: 78.0, grassi_100g: 0.6 },
-  { nome: "Petto di pollo", categoria: "Proteine", unita_misura: "g", peso_unita: 100, calorie_100g: 100, proteine_100g: 23.3, carboidrati_100g: 0.0, grassi_100g: 0.8 },
-  { nome: "Olio extravergine d'oliva", categoria: "Grassi", unita_misura: "g", peso_unita: 100, calorie_100g: 899, proteine_100g: 0.0, carboidrati_100g: 0.0, grassi_100g: 99.9 }
-];
+export function inizializzaAlimentiUI(fnToggle, fnModifica) {
+  callbackToggleStato = fnToggle;
+  callbackModificaAlimento = fnModifica;
 
-export function inizializzaAlimentiUI(onToggle, onEdit) {
-  callbackToggleAlimento = onToggle;
-  callbackEditAlimento = onEdit;
-
+  // Gestione chiusura modale alimenti
   document.getElementById('btnChiudiModalAlimento')?.addEventListener('click', chiudiModalAlimento);
+  document.getElementById('btnAnnullaAlimento')?.addEventListener('click', chiudiModalAlimento);
 
-  // Gestione visibilità e etichetta del campo "Peso dell'unità" in base alla scelta dell'utente
-  const selectUnita = document.getElementById('alim_unita');
-  const wrapperPesoUnita = document.getElementById('wrapperPesoUnita');
-  if (selectUnita && wrapperPesoUnita) {
-    selectUnita.addEventListener('change', (e) => {
-      if (e.target.value === 'g') {
-        wrapperPesoUnita.classList.add('hidden');
-      } else {
-        wrapperPesoUnita.classList.remove('hidden');
-        const labelTesto = document.getElementById('labelPesoUnita');
-        if (labelTesto) {
-          labelTesto.innerText = e.target.value === 'pz' ? 'Peso medio di 1 pezzo (g)' : 'Peso fisso della porzione/confezione (g)';
-        }
-      }
-    });
-  }
-
-  // Listener Autocomplete Open Food Facts + Base Locale con controllo intelligente sulle uova
-  const inputNome = document.getElementById('alim_nome');
+  // Input di ricerca nel modale alimento per autocompletamento online
+  const inputNome = document.getElementById('alimento_nome');
   if (inputNome) {
+    let timeoutId;
     inputNome.addEventListener('input', (e) => {
-      const testo = e.target.value;
+      clearTimeout(timeoutId);
+      const query = e.target.value.trim();
       
-      // Controllo di default: se l'utente sta scrivendo "uova", impostiamo 'pz' di default, altrimenti 'g'
-      const selectUnita = document.getElementById('alim_unita');
-      const wrapperPesoUnita = document.getElementById('wrapperPesoUnita');
-      if (selectUnita && wrapperPesoUnita) {
-        if (testo.toLowerCase().includes('uova') && !selectUnita.dataset.userModified) {
-          selectUnita.value = 'pz';
-          document.getElementById('alim_peso_unita').value = '60';
-          wrapperPesoUnita.classList.remove('hidden');
-          const labelTesto = document.getElementById('labelPesoUnita');
-          if (labelTesto) labelTesto.innerText = 'Peso medio di 1 pezzo (g)';
-        }
-      }
-
-      clearTimeout(debounceTimer);
-      if (!testo || testo.trim().length < 2) {
-        nascondiSuggerimenti();
-        return;
-      }
-      debounceTimer = setTimeout(() => {
-        cercaAlimentiGenerale(testo.trim());
+      // Ritardo di 300ms per evitare chiamate eccessive durante la digitazione
+      timeoutId = setTimeout(() => {
+        cercaAlimentiGenerale(query);
       }, 300);
     });
 
-    // Tracciamo se l'utente ha modificato manualmente l'unità di misura
-    selectUnita?.addEventListener('change', () => {
-      selectUnita.dataset.userModified = 'true';
-    });
-
+    // Chiude il box suggerimenti se si clicca fuori
     document.addEventListener('click', (e) => {
       const box = document.getElementById('suggerimentiAlimenti');
-      if (box && !inputNome.contains(e.target) && !box.contains(e.target)) {
-        nascondiSuggerimenti();
+      const container = document.getElementById('containerNomeAlimento');
+      if (box && container && !container.contains(e.target)) {
+        box.classList.add('hidden');
       }
     });
   }
 }
 
+// -------------------------------------------------------------------------
+// RICERCA ONLINE (Open Food Facts filtrata senza marche)
+// -------------------------------------------------------------------------
 async function cercaAlimentiGenerale(query) {
   const box = document.getElementById('suggerimentiAlimenti');
   if (!box) return;
 
-  box.innerHTML = `<div class="p-2.5 text-xs text-gray-400 text-center">⏳ Ricerca in corso...</div>`;
+  if (!query || query.length < 2) {
+    box.classList.add('hidden');
+    return;
+  }
+
+  box.innerHTML = `<div class="p-2.5 text-xs text-gray-400 text-center">⏳ Ricerca online in corso...</div>`;
   box.classList.remove('hidden');
 
   let risultatiTrovati = [];
-  const matchBase = DATABASE_BASE.filter(item => item.nome.toLowerCase().includes(query.toLowerCase()));
-  matchBase.forEach(m => risultatiTrovati.push({ ...m, fonte: 'Base Locale' }));
 
   try {
-    const url = `https://it.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=5`;
+    // Chiamata online all'API di Open Food Facts con page_size elevato per trovare varianti (integrale, venere, ecc.)
+    const url = `https://it.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=30`;
     const response = await fetch(url);
     const data = await response.json();
 
@@ -105,209 +68,240 @@ async function cercaAlimentiGenerale(query) {
         let grassi = nut['fat_100g'] || 0;
 
         if (p.product_name && kcal > 0) {
-          if (!risultatiTrovati.some(r => r.nome.toLowerCase() === p.product_name.toLowerCase())) {
-            // Selezioniamo 'pz' se il nome contiene uova, altrimenti default a 'g' (peso variabile)
-            const isUova = p.product_name.toLowerCase().includes('uov');
+          let nomePuro = p.product_name.trim();
+
+          // Rimuove la marca dal nome del prodotto se presente nel campo brands
+          if (p.brands) {
+            const primaMarca = p.brands.split(',')[0].trim();
+            const regexMarca = new RegExp(primaMarca, 'gi');
+            nomePuro = nomePuro.replace(regexMarca, '').trim();
+          }
+
+          // Pulisce simboli residui o trattini isolati
+          nomePuro = nomePuro.replace(/^[-,\s]+|[-,\s]+$/g, '').trim();
+          if (!nomePuro) nomePuro = p.product_name;
+
+          // Normalizza ed evita duplicati esatti nella lista dei suggerimenti
+          const nomeNormalizzato = nomePuro.toLowerCase();
+          if (!risultatiTrovati.some(r => r.nome.toLowerCase() === nomeNormalizzato)) {
+            const isUova = nomeNormalizzato.includes('uov');
+            
             risultatiTrovati.push({
-              nome: p.brands ? `${p.product_name} (${p.brands})` : p.product_name,
-              categoria: 'Generico',
+              nome: capitalizeFirst(nomePuro),
+              categoria: determinaCategoria(nomeNormalizzato),
               unita_misura: isUova ? 'pz' : 'g',
               peso_unita: isUova ? 60 : 100,
               calorie_100g: parseFloat(kcal.toFixed(1)),
               proteine_100g: parseFloat(prot.toFixed(1)),
               carboidrati_100g: parseFloat(carbo.toFixed(1)),
-              grassi_100g: parseFloat(grassi.toFixed(1)),
-              fonte: 'Open Food Facts'
+              grassi_100g: parseFloat(grassi.toFixed(1))
             });
           }
         }
       });
     }
   } catch (err) {
-    console.warn("Errore API Open Food Facts:", err);
+    console.warn("Errore ricerca online alimenti:", err);
   }
 
   mostraBoxSuggerimenti(risultatiTrovati);
+}
+
+function capitalizeFirst(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function determinaCategoria(nome) {
+  const n = nome.toLowerCase();
+  if (n.includes('olio') || n.includes('burro') || n.includes('frutta secca') || n.includes('mandorl') || n.includes('noci')) return 'Grassi';
+  if (n.includes('pollo') || n.includes('tacchino') || n.includes('carne') || n.includes('pesce') || n.includes('salmone') || n.includes('tonno') || n.includes('uov') || n.includes('albume') || n.includes('proteine')) return 'Proteine';
+  return 'Carboidrati';
 }
 
 function mostraBoxSuggerimenti(lista) {
   const box = document.getElementById('suggerimentiAlimenti');
   if (!box) return;
 
-  if (!lista || lista.length === 0) {
-    box.innerHTML = `<div class="p-2.5 text-xs text-gray-400 text-center">Nessun alimento trovato. Inserisci manualmente.</div>`;
+  if (lista.length === 0) {
+    box.innerHTML = `<div class="p-2.5 text-xs text-gray-400 text-center">Nessun alimento trovato online. Inserisci i dati manualmente.</div>`;
     box.classList.remove('hidden');
     return;
   }
 
-  box.innerHTML = '';
-  lista.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'p-2.5 hover:bg-emerald-50 cursor-pointer text-xs flex justify-between items-center transition border-b border-gray-50';
-    
-    div.innerHTML = `
+  box.innerHTML = lista.map((item, index) => `
+    <div class="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 text-xs flex justify-between items-center" data-index="${index}">
       <div>
-        <span class="font-semibold text-gray-800 block">${item.nome}</span>
-        <span class="text-[10px] text-gray-400">${item.fonte}</span>
+        <span class="font-medium text-gray-800 dark:text-gray-200">${item.nome}</span>
+        <span class="text-[10px] text-gray-500 ml-1.5 bg-gray-200 dark:bg-gray-600 px-1 py-0.5 rounded">${item.categoria}</span>
       </div>
-      <span class="text-gray-600 font-mono text-right">🔥 ${item.calorie_100g} kcal/100g</span>
-    `;
-
-    div.addEventListener('click', () => {
-      document.getElementById('alim_nome').value = item.nome;
-      document.getElementById('alim_categoria').value = item.categoria || 'Generico';
-      const selectUnita = document.getElementById('alim_unita');
-      if (selectUnita) {
-        selectUnita.value = item.unita_misura || 'g';
-        selectUnita.dataset.userModified = 'true';
-      }
-      document.getElementById('alim_peso_unita').value = item.peso_unita || 60;
-      document.getElementById('alim_kcal').value = item.calorie_100g;
-      document.getElementById('alim_prot').value = item.proteine_100g;
-      document.getElementById('alim_carbo').value = item.carboidrati_100g;
-      document.getElementById('alim_grassi').value = item.grassi_100g;
-
-      const wrapper = document.getElementById('wrapperPesoUnita');
-      if ((item.unita_misura || 'g') === 'g') {
-        wrapper.classList.add('hidden');
-      } else {
-        wrapper.classList.remove('hidden');
-        const labelTesto = document.getElementById('labelPesoUnita');
-        if (labelTesto) {
-          labelTesto.innerText = item.unita_misura === 'pz' ? 'Peso medio di 1 pezzo (g)' : 'Peso fisso della porzione/confezione (g)';
-        }
-      }
-
-      nascondiSuggerimenti();
-    });
-
-    box.appendChild(div);
-  });
+      <div class="text-right text-[11px] text-gray-600 dark:text-gray-400">
+        <span>${item.calorie_100g} kcal</span> | 
+        <span class="text-blue-500">P:${item.proteine_100g}g</span> 
+        <span class="text-amber-500">C:${item.carboidrati_100g}g</span> 
+        <span class="text-rose-500">G:${item.grassi_100g}g</span>
+      </div>
+    </div>
+  `).join('');
 
   box.classList.remove('hidden');
+
+  // Associa l'evento di selezione sui singoli suggerimenti
+  box.querySelectorAll('div[data-index]').forEach(el => {
+    el.addEventListener('click', () => {
+      const idx = parseInt(el.getAttribute('data-index'));
+      applicaAlimentoSelezionato(lista[idx]);
+      box.classList.add('hidden');
+    });
+  });
 }
 
-function nascondiSuggerimenti() {
-  const box = document.getElementById('suggerimentiAlimenti');
-  if (box) {
-    box.classList.add('hidden');
-    box.innerHTML = '';
-  }
+function applicaAlimentoSelezionato(item) {
+  document.getElementById('alimento_nome').value = item.nome;
+  document.getElementById('alimento_categoria').value = item.categoria;
+  document.getElementById('alimento_unita').value = item.unita_misura;
+  document.getElementById('alimento_peso_unita').value = item.peso_unita;
+  document.getElementById('alimento_ kcal').value = item.calorie_100g; // Nota: verificare l'ID esatto nel DOM se diverso
+  document.getElementById('alimento_calorie').value = item.calorie_100g;
+  document.getElementById('alimento_proteine').value = item.proteine_100g;
+  document.getElementById('alimento_carboidrati').value = item.carboidrati_100g;
+  document.getElementById('alimento_grassi').value = item.grassi_100g;
 }
 
+// -------------------------------------------------------------------------
+// RENDER DELLA LISTA ALIMENTI SALVATI
+// -------------------------------------------------------------------------
 export function renderListaAlimenti(alimentiData, filtro = '') {
   const container = document.getElementById('listaAlimentiContainer');
   if (!container) return;
 
-  if (!alimentiData || alimentiData.length === 0) {
-    container.innerHTML = `<p class="text-xs text-gray-500 text-center py-4">Nessun alimento presente.</p>`;
+  const filtroLower = filtro.toLowerCase().trim();
+  const alimentiFiltrati = alimentiData.filter(a => 
+    a.nome.toLowerCase().includes(filtroLower) || 
+    (a.categoria && a.categoria.toLowerCase().includes(filtroLower))
+  );
+
+  if (alimentiFiltrati.length === 0) {
+    container.innerHTML = `
+      <div class="col-span-full text-center py-8 text-gray-400 text-sm">
+        Nessun alimento trovato ${filtro ? 'per la ricerca corrente' : 'nel database locale'}. Clicca su "+ Nuovo Alimento" per aggiungerne uno.
+      </div>
+    `;
     return;
   }
 
-  container.innerHTML = '';
-  const testoFiltro = (filtro || '').toLowerCase().trim();
-  const cibiFiltrati = alimentiData.filter(a => a.nome.toLowerCase().includes(testoFiltro));
+  container.innerHTML = alimentiFiltrati.map(alimento => {
+    const isAttivo = alimento.attivo !== false; // Di default attivo se non specificato
+    return `
+      <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col justify-between transition-all hover:shadow-md ${!isAttivo ? 'opacity-50 grayscale' : ''}">
+        <div>
+          <div class="flex justify-between items-start mb-2">
+            <h3 class="font-semibold text-gray-800 dark:text-gray-100 text-sm leading-snug">${alimento.nome}</h3>
+            <span class="text-[10px] px-2 py-0.5 rounded-full font-medium ${getCategoriaBadgeClass(alimento.categoria)}">
+              ${alimento.categoria || 'Generico'}
+            </span>
+          </div>
+          
+          <div class="text-xs text-gray-500 dark:text-gray-400 mb-3 space-y-0.5">
+            <div>Unità base: <strong>100${alimento.unita_misura || 'g'}</strong> (${alimento.peso_unita || 100}g)</div>
+            <div class="font-medium text-gray-700 dark:text-gray-300">Valori per 100g:</div>
+          </div>
 
-  cibiFiltrati.forEach(a => {
-    const isAttivo = a.attivo !== false;
-    const unitaMisura = a.unita_misura || 'g';
-    const descUnita = unitaMisura === 'pz' ? `Peso Fisso - Pezzo (~${a.peso_unita || 0}g)` : unitaMisura === 'porzione' ? `Peso Fisso - Porzione (${a.peso_unita || 0}g)` : 'Peso Variabile (g)';
-
-    const card = document.createElement('div');
-    card.className = `p-3 flex items-center justify-between gap-2 transition-all ${isAttivo ? 'opacity-100' : 'opacity-50 bg-red-50/50'}`;
-
-    card.innerHTML = `
-      <div class="flex-1">
-        <div class="flex items-center gap-2">
-          <span class="text-sm font-semibold text-gray-800">${a.nome}</span>
-          <span class="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md font-medium">${descUnita}</span>
+          <div class="grid grid-cols-4 gap-1 text-center bg-gray-50 dark:bg-gray-900/50 p-2 rounded-lg mb-3 text-xs">
+            <div>
+              <div class="text-[10px] text-gray-400">Kcal</div>
+              <div class="font-bold text-gray-800 dark:text-gray-200">${alimento.calorie_100g || 0}</div>
+            </div>
+            <div>
+              <div class="text-[10px] text-blue-500">Pro</div>
+              <div class="font-bold text-blue-600 dark:text-blue-400">${alimento.proteine_100g || 0}g</div>
+            </div>
+            <div>
+              <div class="text-[10px] text-amber-500">Carb</div>
+              <div class="font-bold text-amber-600 dark:text-amber-400">${alimento.carboidrati_100g || 0}g</div>
+            </div>
+            <div>
+              <div class="text-[10px] text-rose-500">Grassi</div>
+              <div class="font-bold text-rose-600 dark:text-rose-400">${alimento.grassi_100g || 0}g</div>
+            </div>
+          </div>
         </div>
-        <div class="text-[11px] text-gray-500 mt-1 flex gap-3 font-mono">
-          <span>🔥 ${a.calorie_100g} kcal/100g</span>
-          <span>P: ${a.proteine_100g}g</span>
-          <span>C: ${a.carboidrati_100g}g</span>
-          <span>G: ${a.grassi_100g}g</span>
+
+        <div class="flex justify-between items-center pt-2 border-t border-gray-100 dark:border-gray-700 text-xs">
+          <button onclick="window.toggleStatoAlimento('${alimento.id}')" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1">
+            <i class="fa-solid ${isAttivo ? 'fa-toggle-on text-emerald-500 text-sm' : 'fa-toggle-off text-gray-400 text-sm'}"></i>
+            <span>${isAttivo ? 'Attivo' : 'Disattivato'}</span>
+          </button>
+          
+          <button onclick="window.apriModaleModificaAlimento('${alimento.id}')" class="text-blue-500 hover:text-blue-600 font-medium">
+            <i class="fa-solid fa-pen-to-square mr-1"></i>Modifica
+          </button>
         </div>
-      </div>
-      <div class="flex items-center gap-2">
-        <button type="button" class="btn-toggle text-xs px-2.5 py-1 rounded-lg border transition ${isAttivo ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}">
-          ${isAttivo ? 'Attivo' : 'Inattivo'}
-        </button>
-        <button type="button" class="btn-edit p-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">✏️</button>
       </div>
     `;
+  }).join('');
 
-    card.querySelector('.btn-toggle').addEventListener('click', () => { if (callbackToggleAlimento) callbackToggleAlimento(a.id); });
-    card.querySelector('.btn-edit').addEventListener('click', () => { if (callbackEditAlimento) callbackEditAlimento(a.id); });
-
-    container.appendChild(card);
-  });
+  // Espone globalmente le funzioni per i listener inline creati nei template string
+  window.toggleStatoAlimento = callbackToggleStato;
+  window.apriModaleModificaAlimento = callbackModificaAlimento;
 }
 
-export function apriModalAlimento(alim = null) {
-  const modal = document.getElementById('modalAlimento');
-  const titolo = document.getElementById('modalAlimentoTitolo');
-  const selectUnita = document.getElementById('alim_unita');
-  if (!modal) return;
-
-  nascondiSuggerimenti();
-  modal.classList.remove('hidden');
-
-  const wrapperPeso = document.getElementById('wrapperPesoUnita');
-
-  if (alim) {
-    if (titolo) titolo.innerHTML = '<span>✏️</span> Modifica Alimento';
-    document.getElementById('editAlimentoId').value = alim.id || '';
-    document.getElementById('alim_nome').value = alim.nome || '';
-    document.getElementById('alim_categoria').value = alim.categoria || 'Proteine';
-    if (selectUnita) selectUnita.value = alim.unita_misura || 'g';
-    document.getElementById('alim_peso_unita').value = alim.peso_unita || 60;
-    document.getElementById('alim_kcal').value = alim.calorie_100g ?? '';
-    document.getElementById('alim_prot').value = alim.proteine_100g ?? '';
-    document.getElementById('alim_carbo').value = alim.carboidrati_100g ?? '';
-    document.getElementById('alim_grassi').value = alim.grassi_100g ?? '';
-
-    if ((alim.unita_misura || 'g') === 'g') wrapperPeso.classList.add('hidden');
-    else wrapperPeso.classList.remove('hidden');
-  } else {
-    if (titolo) titolo.innerHTML = '<span>➕</span> Aggiungi Alimento';
-    document.getElementById('editAlimentoId').value = '';
-    document.getElementById('alim_nome').value = '';
-    document.getElementById('alim_categoria').value = 'Proteine';
-    
-    // Per un nuovo alimento generico partiamo di default con peso variabile in grammi ('g'), 
-    // a meno che l'utente non scelga altrimenti o scriva "uova".
-    if (selectUnita) {
-      selectUnita.value = 'g';
-      delete selectUnita.dataset.userModified;
-    }
-    document.getElementById('alim_peso_unita').value = '60';
-    document.getElementById('alim_kcal').value = '';
-    document.getElementById('alim_prot').value = '';
-    document.getElementById('alim_carbo').value = '';
-    document.getElementById('alim_grassi').value = '';
-    wrapperPeso.classList.add('hidden');
+function getCategoriaBadgeClass(categoria) {
+  switch ((categoria || '').toLowerCase()) {
+    case 'proteine': return 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400';
+    case 'carboidrati': return 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400';
+    case 'grassi': return 'bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400';
+    default: return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300';
   }
 }
 
+// -------------------------------------------------------------------------
+// GESTIONE MODALE (APERTURA / CHIUSURA / LETTURA FORM)
+// -------------------------------------------------------------------------
+export function apriModalAlimento(alimento = null) {
+  const modal = document.getElementById('modalAlimento');
+  const titolo = document.getElementById('modalAlimentoTitolo');
+  if (!modal) return;
+
+  // Reset del form
+  document.getElementById('formAlimento')?.reset();
+  document.getElementById('alimento_id').value = alimento ? alimento.id : 'cibo_' + Date.now();
+
+  if (alimento) {
+    if (titolo) titolo.textContent = 'Modifica Alimento';
+    document.getElementById('alimento_nome').value = alimento.nome || '';
+    document.getElementById('alimento_categoria').value = alimento.categoria || 'Carboidrati';
+    document.getElementById('alimento_unita').value = alimento.unita_misura || 'g';
+    document.getElementById('alimento_peso_unita').value = alimento.peso_unita || 100;
+    document.getElementById('alimento_calorie').value = alimento.calorie_100g || 0;
+    document.getElementById('alimento_proteine').value = alimento.proteine_100g || 0;
+    document.getElementById('alimento_carboidrati').value = alimento.carboidrati_100g || 0;
+    document.getElementById('alimento_grassi').value = alimento.grassi_100g || 0;
+  } else {
+    if (titolo) titolo.textContent = 'Nuovo Alimento';
+    document.getElementById('alimento_peso_unita').value = 100;
+    document.getElementById('alimento_unita').value = 'g';
+  }
+
+  modal.classList.remove('hidden');
+}
+
 export function chiudiModalAlimento() {
-  document.getElementById('modalAlimento')?.classList.add('hidden');
-  nascondiSuggerimenti();
+  const modal = document.getElementById('modalAlimento');
+  if (modal) modal.classList.add('hidden');
+  const boxSuggerimenti = document.getElementById('suggerimentiAlimenti');
+  if (boxSuggerimenti) boxSuggerimenti.classList.add('hidden');
 }
 
 export function leggiAlimentoForm() {
-  const id = document.getElementById('editAlimentoId')?.value;
-  const unita = document.getElementById('alim_unita')?.value || 'g';
   return {
-    id: id && id.trim() !== '' ? id : 'cibo_' + Date.now(),
-    nome: document.getElementById('alim_nome')?.value.trim() || '',
-    categoria: document.getElementById('alim_categoria')?.value || 'Generico',
-    unita_misura: unita,
-    peso_unita: unita === 'g' ? 100 : parseFloat(document.getElementById('alim_peso_unita')?.value) || 100,
-    calorie_100g: parseFloat(document.getElementById('alim_kcal')?.value) || 0,
-    proteine_100g: parseFloat(document.getElementById('alim_prot')?.value) || 0,
-    carboidrati_100g: parseFloat(document.getElementById('alim_carbo')?.value) || 0,
-    grassi_100g: parseFloat(document.getElementById('alim_grassi')?.value) || 0,
-    attivo: true
+    id: document.getElementById('alimento_id')?.value || ('cibo_' + Date.now()),
+    nome: document.getElementById('alimento_nome')?.value.trim() || '',
+    categoria: document.getElementById('alimento_categoria')?.value || 'Carboidrati',
+    unita_misura: document.getElementById('alimento_unita')?.value || 'g',
+    peso_unita: parseFloat(document.getElementById('alimento_peso_unita')?.value) || 100,
+    calorie_100g: parseFloat(document.getElementById('alimento_calorie')?.value) || 0,
+    proteine_100g: parseFloat(document.getElementById('alimento_proteine')?.value) || 0,
+    carboidrati_100g: parseFloat(document.getElementById('alimento_carboidrati')?.value) || 0,
+    grassi_100g: parseFloat(document.getElementById('alimento_grassi')?.value) || 0
   };
 }
