@@ -1,10 +1,19 @@
-pwa-nutrizionista/
-│
-├── index.html               # Interfaccia Utente e Gestione PWA
-├── app.js                   # Logica dell'app, formule BMR/TDEE e sync GitHub API
-├── manifest.json            # Configurazione PWA per l'installazione su dispositivi
-├── sw.js                    # Service Worker per caching e supporto offline
-│
-└── data/
-    ├── alimenti.json        # Database cibi e macronutrienti
-    └── utente_data.json     # Profilo, storico pesate e piano nutrizionale
+/
+├── index.html
+├── manifest.json
+├── data/
+│   ├── alimenti.json
+│   └── utente_data.json
+└── js/
+    ├── main.js                  <-- Punto di ingresso principale (orchestratore)
+    ├── config.js                <-- Gestione configurazione locale e credenziali
+    ├── api/
+    │   └── github.js            <-- Tutte le chiamate alle API di GitHub
+    ├── modules/
+    │   ├── fabbisogno.js        <-- Calcolo BMR, TDEE e Macro
+    │   └── alimenti.js          <-- Logica di filtro/selezione alimenti
+    └── ui/
+        ├── navigation.js        <-- Cambio tab e gestione del menu
+        ├── profiloui.js         <-- Rendering e gestione form Profilo
+        ├── alimentiUI.js        <-- Rendering della lista cibi e modale
+        └── pianiUI.js           <-- Rendering e generazione dei piani
