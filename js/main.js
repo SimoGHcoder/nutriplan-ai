@@ -2,6 +2,7 @@
 
 import { inizializzaNavigazione } from './ui/navigation.js';
 import { popolaUIProfilo, leggiProfiloForm, aggiornaResocontoFabbisogno } from './ui/profiloUI.js';
+import { inizializzaAlimentiUI, renderListaAlimenti, apriModalAlimento, chiudiModalAlimento, leggiAlimentoForm } from './ui/alimentiUI.js';
 import { getConfigGH, caricaFileDaGitHub, salvaFileSuGitHub, elencaProfiliGitHub } from './services/githubService.js';
 
 let alimentiData = [];
@@ -16,6 +17,10 @@ let listaProfiliTrovati = [profiloAttivo];
 
 document.addEventListener('DOMContentLoaded', async () => {
   inizializzaNavigazione();
+  
+  // Inizializza la UI degli alimenti passando le funzioni di callback per toggle e modifica
+  inizializzaAlimentiUI(toggleStatoAlimento, apriModaleModificaAlimento);
+  
   collegaEventiUI();
   
   // Sincronizzazione iniziale con GitHub
@@ -47,7 +52,9 @@ async function sincronizzaConGitHub() {
         caricaFileDaGitHub(percorsoFileUtente)
       ]);
 
-      if (alimentiCloud) alimentiData = alimentiCloud;
+      if (alimentiCloud) {
+        alimentiData = alimentiCloud;
+      }
       if (utenteCloud) {
         utenteData = utenteCloud;
         popolaUIProfilo(utenteData);
@@ -70,7 +77,23 @@ async function sincronizzaConGitHub() {
     }
   }
 
-  aggiornaSelectProfiloUI();
+  // Fallback alimenti locali se vuoti
+  if (!alimentiData || alimentiData.length === 0) {
+    const alimentiLocali = localStorage.getItem('pwa_alimenti');
+    if (alimentiLocali) {
+      try {
+        alimentiData = JSON.parse(alimentiLocali);
+      } catch (e) {
+        console.error('Errore parsing alimenti locali', e);
+      }
+    }
+  }
+
+  // Ridisegna la lista alimenti con l'eventuale filtro attivo
+  const filtroCorrente = document.getElementById('cercaAlimentoInput')?.value || '';
+  renderListaAlimenti(alimentiData, filtroCorrente);
+
+  await aggiornaSelectProfiloUI();
   if (syncIcon) syncIcon.classList.remove('animate-spin');
 }
 
@@ -121,7 +144,7 @@ function collegaEventiUI() {
     document.getElementById('modalConfig')?.classList.add('hidden');
   });
 
-  // Ricalcolo in tempo reale
+  // Ricalcolo in tempo reale del profilo
   ['prof_eta', 'prof_sesso', 'prof_altezza', 'prof_peso', 'prof_grasso', 'prof_muscolo', 'prof_viscerale', 'prof_attivita', 'prof_obiettivo'].forEach(id => {
     document.getElementById(id)?.addEventListener('change', aggiornaResocontoFabbisogno);
     document.getElementById(id)?.addEventListener('input', aggiornaResocontoFabbisogno);
@@ -186,4 +209,90 @@ function collegaEventiUI() {
     await sincronizzaConGitHub();
     alert('Token salvato e profili sincronizzati con successo!');
   });
+
+  // --- SEZIONE GESTIONE ALIMENTI ---
+
+  // 1. Ricerca live nella lista alimenti
+  document.getElementById('cercaAlimentoInput')?.addEventListener('input', (e) => {
+    renderListaAlimenti(alimentiData, e.target.value);
+  });
+
+  // 2. Pulsante "Nuovo Alimento" (apre il modale pulito)
+  document.getElementById('btnNuovoAlimento')?.addEventListener('click', () => {
+    apriModalAlimento(null);
+  });
+
+  // 3. Pulsante salvataggio dal modale Alimento (Crea o Aggiorna)
+  document.getElementById('btnSalvaAlimento')?.addEventListener('click', async () => {
+    const nuovoAlimento = leggiAlimentoForm();
+
+    if (!nuovoAlimento.nome) {
+      alert('Il nome dell\'alimento è obbligatorio.');
+      return;
+    }
+
+    // Controlla se l'alimento esiste già per ID (Modifica vs Inserimento)
+    const index = alimentiData.findIndex(a => a.id === nuuvoAlimentoIdMatch(nuovoAlimento.id));
+    
+    // Trova l'indice corretto confrontando l'id
+    const existingIndex = alimentiData.findIndex(a => a.id === nuovoAlimento.id);
+
+    if (existingIndex !== -1) {
+      // Mantiene lo stato attivo precedente
+      nuovoAlimento.attivo = alimentiData[existingIndex].attivo;
+      alimentiData[existingIndex] = nuovoAlimento;
+    } else {
+      alimentiData.push(nuovoAlimento);
+    }
+
+    chiudiModalAlimento();
+    
+    // Salva in locale come cache di sicurezza
+    localStorage.setItem('pwa_alimenti', JSON.stringify(alimentiData));
+
+    // Ridisegna la lista mantenendo il filtro di ricerca attivo
+    const filtroCorrente = document.getElementById('cercaAlimentoInput')?.value || '';
+    renderListaAlimenti(alimentiData, filtroCorrente);
+
+    // Sincronizzazione Cloud su GitHub (data/alimenti.json)
+    try {
+      await salvaFileSuGitHub('data/alimenti.json', alimentiData, `Aggiornamento alimento: ${nuovoAlimento.nome}`);
+      // Feedback discreto o silenzioso per non interrompere il flusso
+    } catch (err) {
+      console.warn('Errore sync GitHub alimenti:', err);
+      alert('Alimento salvato in locale. Errore di sincronizzazione con GitHub: ' + err.message);
+    }
+  });
+}
+
+// Funzione di supporto per ricavare l'id pulito se necessario
+function nuuvoAlimentoIdMatch(id) {
+  return id;
+}
+
+// Funzione di toggle attivazione/disattivazione alimento
+function toggleStatoAlimento(id) {
+  const alimento = alimentiData.find(a => a.id === id);
+  if (alimento) {
+    alimento.attivo = alimento.attivo === false ? true : false;
+    
+    // Salva in locale
+    localStorage.setItem('pwa_alimenti', JSON.stringify(alimentiData));
+
+    const filtroCorrente = document.getElementById('cercaAlimentoInput')?.value || '';
+    renderListaAlimenti(alimentiData, filtroCorrente);
+    
+    // Sincronizza lo stato modificato su GitHub
+    salvaFileSuGitHub('data/alimenti.json', alimentiData, `Cambio stato alimento: ${alimento.nome}`).catch(err => {
+      console.warn("Errore sync stato alimento su GitHub:", err);
+    });
+  }
+}
+
+// Funzione di apertura modale per la modifica di un alimento esistente
+function apriModaleModificaAlimento(id) {
+  const alimento = alimentiData.find(a => a.id === id);
+  if (alimento) {
+    apriModalAlimento(alimento);
+  }
 }
