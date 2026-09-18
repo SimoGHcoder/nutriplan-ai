@@ -1,58 +1,120 @@
-# 🍏 NutriPlan AI
+# 🥗 NutriPlan AI
 
-**NutriPlan AI** è una Progressive Web App (PWA) moderna, leggera e totalmente client-side per la gestione del profilo nutrizionale, il calcolo del fabbisogno calorico (Mifflin-St Jeor e Katch-McArdle), la gestione di un database alimenti con ricerca online integrata (tramite *Open Food Facts*) e la generazione automatica di piani alimentari giornalieri.
+**NutriPlan AI** è una web app per la gestione del profilo nutrizionale, il calcolo del fabbisogno calorico (Mifflin-St Jeor e Katch-McArdle) e la generazione automatica di piani alimentari giornalieri personalizzati.
 
-Il punto di forza di questa applicazione è la **totale assenza di un database backend tradizionale**: tutti i dati dell'utente (profilo, storico, piani) e il catalogo degli alimenti vengono salvati direttamente all'interno di un repository **GitHub privato o pubblico** di proprietà dell'utente, sfruttando le GitHub REST API.
+## Stack Tecnologico
 
----
+- **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
+- **Auth + Database**: [Supabase](https://supabase.com/) (PostgreSQL + Google OAuth)
+- **Hosting**: [Vercel](https://vercel.com/)
+- **CSS**: [Tailwind CSS](https://tailwindcss.com/)
 
-## 🚀 Come usare questa repository come Template
+## Funzionalità
 
-Se vuoi creare la tua istanza personale di NutriPlan AI:
-
-1. Clicca sul pulsante **"Use this template"** in alto a destra su questa pagina GitHub per creare una nuova repository basata su questo progetto.
-2. Clona la tua nuova repository sul tuo computer o attaccala direttamente a un servizio di hosting statico (es. **GitHub Pages**, Vercel o Netlify).
-3. Assicurati che all'interno della cartella `data/` siano presenti i file di esempio:
-   * `data/alimenti.json` (database iniziale degli alimenti)
-   * `data/utente_default.json` (profilo utente iniziale)
-
----
-
-## ⚙️ Configurazione Iniziale
-
-Per permettere all'applicazione di leggere e scrivere i file di configurazione su GitHub, devi generare un **Personal Access Token (PAT)** di GitHub:
-
-1. Vai su GitHub -> **Settings** -> **Developer settings** -> **Personal access tokens** -> **Tokens (classic)**.
-2. Genera un nuovo token con lo scope permessi **`repo`** (Full control of private repositories).
-3. Apri la web app nel tuo browser, clicca sull'icona delle **Impostazioni (⚙️)** in alto e inserisci:
-   * Il tuo **Token GitHub**
-   * Il tuo **Username GitHub**
-   * Il nome del **Repository** (es. `nutriplan-ai`)
-   * L'ID del profilo (es. `default` o il tuo nome, che caricherà/salverà il file `data/utente_tuonome.json`).
+- 🔐 Login con Google (Supabase Auth)
+- 👤 Profilo nutrizionale personale (BMR/TDEE con Mifflin-St Jeor o Katch-McArdle)
+- 🥦 Database alimenti ibrido (globale + personalizzazioni per utente)
+- 🔍 Ricerca alimenti online via Open Food Facts
+- 📋 Generazione piani alimentari giornalieri automatici
+- 🔢 Versioning automatico visibile nell'header
 
 ---
 
-## 📂 Struttura del Progetto
+## Setup Locale
 
-```text
+### 1. Clona e installa
+
+```bash
+git clone <repo-url>
+cd nutriplan-ai
+npm install
+```
+
+### 2. Configura Supabase
+
+1. Crea un progetto su [supabase.com](https://supabase.com)
+2. Vai su **SQL Editor** ed esegui il file `supabase/migrations/001_initial.sql`
+3. Abilitare Google OAuth: **Authentication → Providers → Google** (richiede Google Cloud project)
+4. In **Authentication → URL Configuration** aggiungi:
+   - Site URL: `http://localhost:3000`
+   - Redirect URL: `http://localhost:3000/auth/callback`
+
+### 3. Variabili d'ambiente
+
+```bash
+cp .env.example .env.local
+# Modifica .env.local con i tuoi valori Supabase (Settings → API)
+```
+
+### 4. Seed alimenti globali (opzionale)
+
+Esegui lo script seed per popolare il database di alimenti base:
+
+```bash
+# Nel SQL Editor di Supabase, inserisci gli alimenti da public/seed/alimenti_globali.json
+```
+
+### 5. Avvia in locale
+
+```bash
+npm run dev
+# → http://localhost:3000
+```
+
+---
+
+## Deploy su Vercel
+
+1. Push del repo su GitHub
+2. Connetti il repo su [vercel.com](https://vercel.com)
+3. In **Settings → Environment Variables** aggiungi:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+4. In Supabase, aggiungi l'URL Vercel a **Authentication → URL Configuration**
+5. Deploy automatico ad ogni push 🚀
+
+---
+
+## Versioning
+
+La versione dell'app è gestita da `package.json` ed è visibile nell'header.
+
+```bash
+npm version patch   # bug fix:    1.0.0 → 1.0.1
+npm version minor   # nuova feat: 1.0.0 → 1.1.0
+npm version major   # breaking:   1.0.0 → 2.0.0
+git push            # Vercel deploya automaticamente
+```
+
+---
+
+## Struttura Progetto
+
+```
 nutriplan-ai/
-├── index.html                  # Interfaccia principale (UI con Tailwind CSS)
-├── manifest.json               # Configurazione PWA
-├── sw.js                       # Service Worker per la cache offline
-├── css/
-│   └── style.css               # Stili personalizzati / Tailwind
-├── js/
-│   ├── main.js                 # Entry point dell'applicazione
-│   ├── config.js               # Gestione configurazione e localStorage
-│   ├── api/
-│   │   └── github.js           # Servizio di comunicazione REST con GitHub
-│   ├── modules/
-│   │   ├── fabbisogno.js       # Calcolo BMR, TDEE e Macronutrienti
-│   │   └── alimenti.js         # Logica di generazione dei piani alimentari
-│   └── ui/
-│       ├── navigation.js       # Gestione tab e modale impostazioni
-│       ├── profiloUI.js        # Rendering e gestione dati utente / BIA
-│       └── alimentiUI.js       # Gestione griglia, modali e ricerca Open Food Facts
-└── data/
-    ├── alimenti.json           # Database centralizzato degli alimenti
-    └── utente_default.json     # Profilo utente di default
+├── app/                      # Next.js App Router
+│   ├── auth/callback/        # OAuth callback
+│   ├── login/                # Pagina login Google
+│   └── dashboard/            # Area protetta (profilo, alimenti, piano)
+├── components/               # Componenti React
+│   ├── layout/Header.js      # Header con versione + navigazione
+│   ├── profilo/              # Form profilo + calcolo fabbisogno
+│   ├── alimenti/             # Griglia alimenti + modale
+│   └── piano/                # Vista piano giornaliero
+├── lib/
+│   ├── supabase/             # Client Supabase (browser + server)
+│   ├── services/             # profileService, alimentiService, pianiService
+│   └── modules/              # Logica calcolo (fabbisogno, generazione piano)
+├── supabase/
+│   └── migrations/           # Schema SQL
+└── public/
+    └── seed/                 # Dati seed alimenti globali
+```
+
+---
+
+## Note per gli Aggiornamenti
+
+- **Aggiornamenti app**: modificare codice + `npm version` + push
+- **Nuovi alimenti globali**: inserire in `alimenti_globali` via SQL (non tocca mai `alimenti_utente`)
+- **Personalizzazioni utente**: gestite separatamente in `alimenti_utente` — mai modificate dagli aggiornamenti

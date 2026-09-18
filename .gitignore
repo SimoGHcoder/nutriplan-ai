@@ -1,12 +1,22 @@
-# Sistema operativo e build
+# Next.js
+.next/
+out/
+
+# Env locali (MAI committare)
+.env.local
+.env.*.local
+
+# Node
+node_modules/
+
+# Build
+build/
+
+# OS
 .DS_Store
 Thumbs.db
-node_modules/
-dist/
-build/
-.env
-.env.local
 
-# IGNORA tutti i file utente personali, tranne il template di esempio
-data/utente_*.json
-!data/utente_default.json
+# Editor
+.vscode/
+.idea/
+*.swp

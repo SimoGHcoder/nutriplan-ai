@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NutriPlan AI</title>
+
+  <!-- Favicon SVG dinamica -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥗</text></svg>">
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#059669">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col font-sans">
+
+  <!-- Header & Navigazione -->
+  <header class="bg-emerald-600 text-white shadow-md sticky top-0 z-50">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+      <h1 class="text-lg font-bold flex items-center gap-2">
+        <span>🥗</span> NutriPlan AI
+      </h1>
+      <div class="flex items-center gap-2">
+        <button id="btnSyncCloud" title="Sincronizza Cloud" class="p-2 hover:bg-emerald-700 rounded-lg transition">
+          <span id="syncIcon" class="block">🔄</span>
+        </button>
+        <button id="btnSettings" title="Impostazioni Cloud" class="p-2 hover:bg-emerald-700 rounded-lg transition">
+          ⚙️
+        </button>
+      </div>
+    </div>
+    
+    <!-- Tab Navigazione -->
+    <nav class="max-w-4xl mx-auto px-2 flex border-t border-emerald-500/40 text-sm">
+      <button data-target="sec-profilo" class="nav-tab flex-1 py-2.5 text-center font-medium border-b-2 border-white bg-emerald-700 text-white transition">
+        👤 Profilo
+      </button>
+      <button data-target="sec-alimenti" class="nav-tab flex-1 py-2.5 text-center font-medium border-b-2 border-transparent text-emerald-100 hover:bg-emerald-700/50 transition">
+        🥦 Alimenti
+      </button>
+      <button data-target="sec-piano" class="nav-tab flex-1 py-2.5 text-center font-medium border-b-2 border-transparent text-emerald-100 hover:bg-emerald-700/50 transition">
+        📋 Piano
+      </button>
+    </nav>
+  </header>
+
+  <!-- Contenuto Principale -->
+  <main class="max-w-4xl w-full mx-auto p-4 flex-1">
+
+    <!-- SEZIONE PROFILO -->
+    <section id="sec-profilo" class="space-y-6">
+      
+      <!-- Selettore / Gestione Profili Rapida -->
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <span class="text-sm font-semibold text-gray-700">Profilo Attivo:</span>
+          <select id="selectProfiloAttivo" class="p-2 border rounded-lg text-sm bg-gray-50 font-medium focus:ring-2 focus:ring-emerald-500 outline-none flex-1 sm:w-48">
+            <option value="default">default</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <button id="btnNuovoProfilo" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg font-medium transition">
+            ➕ Nuovo Profilo
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <span>👤</span> Dati Profilo Corporeo
+        </h2>
+
+        <form id="formProfilo" onsubmit="event.preventDefault();" class="space-y-6">
+          <!-- Dati Generali -->
+          <div>
+            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Dati Generali</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="md:col-span-3">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Nome Identificativo Profilo</label>
+                <input type="text" id="prof_nome" placeholder="Es. simone" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Età</label>
+                <input type="number" id="prof_eta" placeholder="Anni" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Sesso</label>
+                <select id="prof_sesso" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+                  <option value="M">Maschio</option>
+                  <option value="F">Femmina</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Altezza (cm)</label>
+                <input type="number" id="prof_altezza" placeholder="cm" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- Dati Bilancia BIA -->
+          <div class="pt-4 border-t border-gray-100">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Parametri BIA / Bilancia BMR</h3>
+              <span class="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-medium">Consigliati</span>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Peso (kg) *</label>
+                <input type="number" step="0.1" id="prof_peso" placeholder="kg" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none font-semibold text-gray-800">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Grasso Corporeo (%)</label>
+                <input type="number" step="0.1" id="prof_grasso" placeholder="%" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Massa Muscolare (kg)</label>
+                <input type="number" step="0.1" id="prof_muscolo" placeholder="kg" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Grasso Viscerale (1-50)</label>
+                <input type="number" id="prof_viscerale" placeholder="Livello" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- Attività e Obiettivi -->
+          <div class="pt-4 border-t border-gray-100">
+            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Stile di Vita e Obiettivo</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Livello di Attività Fisica</label>
+                <select id="prof_attivita" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+                  <option value="sedentario">Sedentario (Ufficio, poco movimento)</option>
+                  <option value="leggero">Leggero (1-3 allenamenti/settimana)</option>
+                  <option value="moderato">Moderato (3-5 allenamenti/settimana)</option>
+                  <option value="intenso">Intenso (6-7 allenamenti/settimana)</option>
+                  <option value="molto_intenso">Molto Intenso (Lavoro fisico + allenamenti)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Obiettivo Alimentare</label>
+                <select id="prof_obiettivo" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+                  <option value="dimagrimento_intenso">Dimagrimento Marcato (-500 kcal)</option>
+                  <option value="dimagrimento_leggero">Dimagrimento Moderato (-300 kcal)</option>
+                  <option value="mantenimento">Mantenimento Peso</option>
+                  <option value="massa">Aumento Massa Muscolare (+300 kcal)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resoconto Calcolato -->
+          <div class="pt-4 border-t border-gray-100">
+            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Fabbisogno Calcolatometrico</h3>
+            <div id="resocontoFabbisogno"></div>
+          </div>
+
+          <div class="pt-2 flex justify-end">
+            <button type="button" id="btnSalvaProfilo" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-6 py-2.5 rounded-lg shadow-sm transition flex items-center gap-2">
+              <span>💾</span> Salva Profilo
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- SEZIONE ALIMENTI -->
+    <section id="sec-alimenti" class="hidden space-y-4">
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+          <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <span>🥦</span> Database Alimenti
+          </h2>
+          <button id="btnNuovoAlimento" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition flex items-center gap-1.5">
+            <span>➕</span> Nuovo Alimento
+          </button>
+        </div>
+
+        <div class="mb-4">
+          <input type="text" id="cercaAlimentoInput" placeholder="Cerca alimento per nome o categoria..." class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
+        </div>
+
+        <div id="listaAlimentiContainer" class="divide-y divide-gray-100"></div>
+      </div>
+    </section>
+
+    <!-- SEZIONE PIANO -->
+    <section id="sec-piano" class="hidden space-y-4">
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+          <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <span>📋</span> Piano Alimentare Corrente
+          </h2>
+          <button id="btnGeneraPiano" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition flex items-center gap-1.5">
+            <span>⚡</span> Genera Nuovo Piano
+          </button>
+        </div>
+
+        <div id="pianoAlimentareContainer"></div>
+      </div>
+    </section>
+
+    <!-- MODALE CONFIGURAZIONE CLOUD (SOLO TOKEN) -->
+    <div id="modalConfig" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+      <div class="bg-white w-full max-w-md rounded-xl p-6 shadow-xl space-y-4">
+        <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+          <span>⚙️</span> Impostazioni GitHub
+        </h3>
+        <p class="text-xs text-gray-500">Inserisci il tuo Personal Access Token di GitHub per connettere l'applicazione al repository cloud.</p>
+        
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1">GitHub Personal Access Token</label>
+          <input type="password" id="cfg_token" placeholder="ghp_xxxxxxxxxxxx" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" id="btnChiudiConfig" class="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition">Annulla</button>
+          <button type="button" id="btnSalvaConfig" class="px-4 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition">Salva Token</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODALE INSERIMENTO / MODIFICA ALIMENTO CON AUTOCOMPLETE -->
+    <div id="modalAlimento" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+      <div class="bg-white w-full max-w-md rounded-xl p-6 shadow-xl space-y-4">
+        <h3 id="modalAlimentoTitolo" class="text-lg font-bold text-gray-800 flex items-center gap-2">
+          <span>➕</span> Aggiungi Alimento
+        </h3>
+        
+        <!-- Input nascosto ID -->
+        <input type="hidden" id="alimento_id">
+
+        <div class="space-y-3">
+          <!-- Campo Nome con Container Suggerimenti Autocomplete -->
+          <div class="relative">
+            <label class="block text-xs font-medium text-gray-700 mb-1">Nome Alimento</label>
+            <input type="text" id="alimento_nome" placeholder="Es. Riso basmati, Petto di pollo..." class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm" autocomplete="off">
+            <div id="suggerimentiAlimenti" class="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto hidden z-50 divide-y divide-gray-50"></div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Categoria</label>
+            <select id="alimento_categoria" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
+              <option value="Proteine">Proteine</option>
+              <option value="Carboidrati">Carboidrati</option>
+              <option value="Grassi">Grassi</option>
+              <option value="Verdura">Verdura</option>
+              <option value="Frutta">Frutta</option>
+              <option value="Generico">Generico</option>
+            </select>
+          </div>
+
+          <!-- Gestione Unità di Misura e Peso Variabile / Fisso -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label for="alimento_unita" class="block text-xs font-medium text-gray-700 mb-1">Gestione Peso</label>
+              <select id="alimento_unita" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm bg-white">
+                <option value="g">Peso Variabile (grammi)</option>
+                <option value="pz">Peso Fisso (a pezzi)</option>
+                <option value="porzione">Peso Fisso (a porzione)</option>
+              </select>
+            </div>
+            
+            <div id="wrapperPesoUnita" class="hidden">
+              <label id="labelPesoUnita" for="alimento_peso_unita" class="block text-xs font-medium text-gray-700 mb-1">Peso medio pezzo (g)</label>
+              <input type="number" step="any" id="alimento_peso_unita" placeholder="Es. 60" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Calorie (per 100g)</label>
+              <input type="number" step="0.1" id="alimento_calorie_100g" placeholder="kcal" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Proteine (g)</label>
+              <input type="number" step="0.1" id="alimento_proteine_100g" placeholder="g" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Carboidrati (g)</label>
+              <input type="number" step="0.1" id="alimento_carboidrati_100g" placeholder="g" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Grassi (g)</label>
+              <input type="number" step="0.1" id="alimento_grassi_100g" placeholder="g" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" id="btnChiudiModalAlimento" class="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition">Annulla</button>
+          <button type="button" id="btnSalvaAlimento" class="px-4 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition">Salva Alimento</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Entry Point Javascript Module -->
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

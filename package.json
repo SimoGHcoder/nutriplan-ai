@@ -1,0 +1,25 @@
+{
+  "name": "nutriplan-ai",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "^15.3.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.45.4"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.14",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^15.3.0"
+  }
+}

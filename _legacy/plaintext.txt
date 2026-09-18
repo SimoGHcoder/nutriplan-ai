@@ -1,0 +1,21 @@
+nutriplan-ai/
+├── index.html                  # Interfaccia principale (UI con Tailwind CSS)
+├── manifest.json               # Configurazione PWA
+├── sw.js                       # Service Worker per la cache offline
+├── css/
+│   └── style.css               # Stili personalizzati / Tailwind
+├── js/
+│   ├── main.js                 # Entry point dell'applicazione
+│   ├── config.js               # Gestione configurazione e localStorage
+│   ├── api/
+│   │   └── github.js           # Servizio di comunicazione REST con GitHub
+│   ├── modules/
+│   │   ├── fabbisogno.js       # Calcolo BMR, TDEE e Macronutrienti
+│   │   └── alimenti.js         # Logica di generazione dei piani alimentari
+│   └── ui/
+│       ├── navigation.js       # Gestione tab e modale impostazioni
+│       ├── profiloUI.js        # Rendering e gestione dati utente / BIA
+│       └── alimentiUI.js       # Gestione griglia, modali e ricerca Open Food Facts
+└── data/
+    ├── alimenti.json           # Database centralizzato degli alimenti
+    └── utente_default.json     # Profilo utente di default

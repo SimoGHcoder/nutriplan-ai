@@ -1,0 +1,182 @@
+[
+  {
+    "nome": "Petto di Pollo (crudo)",
+    "categoria": "Proteine",
+    "calorie_100g": 110,
+    "proteine_100g": 23,
+    "carboidrati_100g": 0,
+    "grassi_100g": 1.2,
+    "unita_misura": "g",
+    "attivo": true
+  },
+  {
+    "nome": "Riso Basmati (crudo)",
+    "categoria": "Carboidrati",
+    "calorie_100g": 350,
+    "proteine_100g": 7,
+    "carboidrati_100g": 78,
+    "grassi_100g": 0.8,
+    "unita_misura": "g",
+    "attivo": true
+  },
+  {
+    "nome": "Riso Integrale (crudo)",
+    "categoria": "Carboidrati",
+    "calorie_100g": 337,
+    "proteine_100g": 7.5,
+    "carboidrati_100g": 74,
+    "grassi_100g": 2.2,
+    "unita_misura": "g",
+    "attivo": true
+  },
+  {
+    "nome": "Olio Extravergine d'Oliva",
+    "categoria": "Grassi",
+    "calorie_100g": 884,
+    "proteine_100g": 0,
+    "carboidrati_100g": 0,
+    "grassi_100g": 100,
+    "unita_misura": "g",
+    "attivo": true
+  },
+  {
+    "nome": "Uova intere",
+    "categoria": "Proteine",
+    "calorie_100g": 128,
+    "proteine_100g": 12.4,
+    "carboidrati_100g": 0.1,
+    "grassi_100g": 8.7,
+    "unita_misura": "g",
+    "attivo": true
+  },
+  {
+    "nome": "Albume d'uovo",
+    "categoria": "Proteine",
+    "calorie_100g": 52,
+    "proteine_100g": 11,
+    "carboidrati_100g": 0.7,
+    "grassi_100g": 0.2,
+    "unita_misura": "g",
+    "attivo": true
+  },
+  {
+    "nome": "Tonno al naturale",
+    "categoria": "Proteine",
+    "calorie_100g": 116,
+    "proteine_100g": 25,
+    "carboidrati_100g": 0,
+    "grassi_100g": 1,
+    "unita_misura": "g",
+    "attivo": true
+  },
+  {
+    "nome": "Salmone (crudo)",
+    "categoria": "Proteine",
+    "calorie_100g": 208,
+    "proteine_100g": 20,
+    "carboidrati_100g": 0,
+    "grassi_100g": 13,
+    "unita_misura": "g",
+    "attivo": true
+  },
+  {
+    "nome": "Fiocchi di Avena",
+    "categoria": "Carboidrati",
+    "calorie_100g": 389,
+    "proteine_100g": 17,
+    "carboidrati_100g": 66,
+    "grassi_100g": 7,
+    "unita_misura": "g",
+    "attivo": true
+  },
+  {
+    "nome": "Pasta di Semola (cruda)",
+    "categoria": "Carboidrati",
+    "calorie_100g": 353,
+    "proteine_100g": 13,
+    "carboidrati_100g": 72,
+    "grassi_100g": 1.5,
+    "unita_misura": "g",
+    "attivo": true
+  },
+  {
+    "nome": "Patate (crude)",
+    "categoria": "Carboidrati",
+    "calorie_100g": 77,
+    "proteine_100g": 2,
+    "carboidrati_100g": 17,
+    "grassi_100g": 0.1,
+    "unita_misura": "g",
+    "attivo": true
+  },
+  {
+    "nome": "Ricotta vaccina",
+    "categoria": "Latticini",
+    "calorie_100g": 146,
+    "proteine_100g": 11,
+    "carboidrati_100g": 3,
+    "grassi_100g": 10,
+    "unita_misura": "g",
+    "attivo": true
+  },
+  {
+    "nome": "Yogurt greco 0%",
+    "categoria": "Latticini",
+    "calorie_100g": 59,
+    "proteine_100g": 10,
+    "carboidrati_100g": 4,
+    "grassi_100g": 0.3,
+    "unita_misura": "g",
+    "attivo": true
+  },
+  {
+    "nome": "Mandorle",
+    "categoria": "Grassi",
+    "calorie_100g": 579,
+    "proteine_100g": 21,
+    "carboidrati_100g": 22,
+    "grassi_100g": 49,
+    "unita_misura": "g",
+    "attivo": true
+  },
+  {
+    "nome": "Broccoli",
+    "categoria": "Verdure",
+    "calorie_100g": 34,
+    "proteine_100g": 2.8,
+    "carboidrati_100g": 7,
+    "grassi_100g": 0.4,
+    "unita_misura": "g",
+    "attivo": true
+  },
+  {
+    "nome": "Spinaci",
+    "categoria": "Verdure",
+    "calorie_100g": 23,
+    "proteine_100g": 2.9,
+    "carboidrati_100g": 3.6,
+    "grassi_100g": 0.4,
+    "unita_misura": "g",
+    "attivo": true
+  },
+  {
+    "nome": "Banana",
+    "categoria": "Frutta",
+    "calorie_100g": 89,
+    "proteine_100g": 1.1,
+    "carboidrati_100g": 23,
+    "grassi_100g": 0.3,
+    "unita_misura": "g",
+    "attivo": true
+  },
+  {
+    "nome": "Mela",
+    "categoria": "Frutta",
+    "calorie_100g": 52,
+    "proteine_100g": 0.3,
+    "carboidrati_100g": 14,
+    "grassi_100g": 0.2,
+    "unita_misura": "g",
+    "attivo": true
+  }
+]
