@@ -1,21 +1,21 @@
-// plaintext.txt
-
-/
-├── index.html
-├── manifest.json
-├── data/
-│   ├── alimenti.json
-│   └── utente_data.json
-└── js/
-    ├── main.js                  <-- Punto di ingresso principale (orchestratore)
-    ├── config.js                <-- Gestione configurazione locale e credenziali
-    ├── api/
-    │   └── github.js            <-- Tutte le chiamate alle API di GitHub
-    ├── modules/
-    │   ├── fabbisogno.js        <-- Calcolo BMR, TDEE e Macro
-    │   └── alimenti.js          <-- Logica di filtro/selezione alimenti
-    └── ui/
-        ├── navigation.js        <-- Cambio tab e gestione del menu
-        ├── profiloui.js         <-- Rendering e gestione form Profilo
-        ├── alimentiUI.js        <-- Rendering della lista cibi e modale
-        └── pianiUI.js           <-- Rendering e generazione dei piani
+nutriplan-ai/
+├── index.html                  # Interfaccia principale (UI con Tailwind CSS)
+├── manifest.json               # Configurazione PWA
+├── sw.js                       # Service Worker per la cache offline
+├── css/
+│   └── style.css               # Stili personalizzati / Tailwind
+├── js/
+│   ├── main.js                 # Entry point dell'applicazione
+│   ├── config.js               # Gestione configurazione e localStorage
+│   ├── api/
+│   │   └── github.js           # Servizio di comunicazione REST con GitHub
+│   ├── modules/
+│   │   ├── fabbisogno.js       # Calcolo BMR, TDEE e Macronutrienti
+│   │   └── alimenti.js         # Logica di generazione dei piani alimentari
+│   └── ui/
+│       ├── navigation.js       # Gestione tab e modale impostazioni
+│       ├── profiloUI.js        # Rendering e gestione dati utente / BIA
+│       └── alimentiUI.js       # Gestione griglia, modali e ricerca Open Food Facts
+└── data/
+    ├── alimenti.json           # Database centralizzato degli alimenti
+    └── utente_default.json     # Profilo utente di default
