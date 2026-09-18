@@ -11,18 +11,40 @@ let utenteData = {
   piano_alimentare: []
 };
 
+// Migrazione una-tantum delle chiavi localStorage dal vecchio prefisso "pwa_"
+// a "nutriplan_", per non perdere i dati già salvati sui dispositivi esistenti.
+(function migraChiaviLocalStorage() {
+  ['profilo_attivo', 'alimenti'].forEach(suffisso => {
+    const vecchiaChiave = `pwa_${suffisso}`;
+    const nuovaChiave = `nutriplan_${suffisso}`;
+    if (localStorage.getItem(vecchiaChiave) !== null && localStorage.getItem(nuovaChiave) === null) {
+      localStorage.setItem(nuovaChiave, localStorage.getItem(vecchiaChiave));
+    }
+  });
+
+  // I profili utente usano una chiave dinamica: pwa_utente_<nome> -> nutriplan_utente_<nome>
+  Object.keys(localStorage)
+    .filter(chiave => chiave.startsWith('pwa_utente_'))
+    .forEach(vecchiaChiave => {
+      const nuovaChiave = 'nutriplan_' + vecchiaChiave.slice('pwa_'.length);
+      if (localStorage.getItem(nuovaChiave) === null) {
+        localStorage.setItem(nuovaChiave, localStorage.getItem(vecchiaChiave));
+      }
+    });
+})();
+
 // Profilo attualmente selezionato in UI
-let profiloAttivo = localStorage.getItem('pwa_profilo_attivo') || 'default';
+let profiloAttivo = localStorage.getItem('nutriplan_profilo_attivo') || 'default';
 let listaProfiliTrovati = [profiloAttivo];
 
 document.addEventListener('DOMContentLoaded', async () => {
   inizializzaNavigazione();
-  
+
   // Inizializza la UI degli alimenti passando le funzioni di callback per toggle e modifica
   inizializzaAlimentiUI(toggleStatoAlimento, apriModaleModificaAlimento);
-  
+
   collegaEventiUI();
-  
+
   // Sincronizzazione iniziale con GitHub
   await sincronizzaConGitHub();
 });
@@ -41,7 +63,7 @@ async function sincronizzaConGitHub() {
         // Se il profilo attivo attuale non è nella lista cloud, imposta il primo disponibile
         if (!listaProfiliTrovati.includes(profiloAttivo)) {
           profiloAttivo = listaProfiliTrovati[0];
-          localStorage.setItem('pwa_profilo_attivo', profiloAttivo);
+          localStorage.setItem('nutriplan_profilo_attivo', profiloAttivo);
         }
       }
 
@@ -66,7 +88,7 @@ async function sincronizzaConGitHub() {
 
   // Fallback locale se non caricato dal cloud
   if (!utenteData.profilo || Object.keys(utenteData.profilo).length === 0) {
-    const localeSalvato = localStorage.getItem(`pwa_utente_${profiloAttivo}`);
+    const localeSalvato = localStorage.getItem(`nutriplan_utente_${profiloAttivo}`);
     if (localeSalvato) {
       try {
         utenteData = JSON.parse(localeSalvato);
@@ -79,7 +101,7 @@ async function sincronizzaConGitHub() {
 
   // Fallback alimenti locali se vuoti
   if (!alimentiData || alimentiData.length === 0) {
-    const alimentiLocali = localStorage.getItem('pwa_alimenti');
+    const alimentiLocali = localStorage.getItem('nutriplan_alimenti');
     if (alimentiLocali) {
       try {
         alimentiData = JSON.parse(alimentiLocali);
@@ -116,7 +138,7 @@ async function aggiornaSelectProfiloUI() {
   }
 
   // Costruisci le opzioni del select
-  select.innerHTML = listaProfiliTrovati.map(p => 
+  select.innerHTML = listaProfiliTrovati.map(p =>
     `<option value="${p}" ${p === profiloAttivo ? 'selected' : ''}>${p}</option>`
   ).join('');
 }
@@ -125,8 +147,8 @@ function collegaEventiUI() {
   // Cambio profilo dal menu a tendina
   document.getElementById('selectProfiloAttivo')?.addEventListener('change', async (e) => {
     profiloAttivo = e.target.value;
-    localStorage.setItem('pwa_profilo_attivo', profiloAttivo);
-    
+    localStorage.setItem('nutriplan_profilo_attivo', profiloAttivo);
+
     // Ricarica i dati del profilo appena selezionato
     await sincronizzaConGitHub();
   });
@@ -154,19 +176,19 @@ function collegaEventiUI() {
   document.getElementById('btnSalvaProfilo')?.addEventListener('click', async () => {
     const datiForm = leggiProfiloForm();
     const nomeProfiloInserito = (document.getElementById('prof_nome')?.value || profiloAttivo).trim().toLowerCase().replace(/\s+/g, '_');
-    
+
     if (!nomeProfiloInserito) {
       alert('Inserisci un nome valido per il profilo.');
       return;
     }
 
     profiloAttivo = nomeProfiloInserito;
-    localStorage.setItem('pwa_profilo_attivo', profiloAttivo);
+    localStorage.setItem('nutriplan_profilo_attivo', profiloAttivo);
 
     utenteData.profilo = datiForm;
-    
+
     // Salvataggio locale
-    localStorage.setItem(`pwa_utente_${profiloAttivo}`, JSON.stringify(utenteData));
+    localStorage.setItem(`nutriplan_utente_${profiloAttivo}`, JSON.stringify(utenteData));
 
     // Salvataggio Cloud su GitHub
     const percorsoFileUtente = `data/utente_${profiloAttivo}.json`;
@@ -244,9 +266,9 @@ function collegaEventiUI() {
     }
 
     chiudiModalAlimento();
-    
+
     // Salva in locale come cache di sicurezza
-    localStorage.setItem('pwa_alimenti', JSON.stringify(alimentiData));
+    localStorage.setItem('nutriplan_alimenti', JSON.stringify(alimentiData));
 
     // Ridisegna la lista mantenendo il filtro di ricerca attivo
     const filtroCorrente = document.getElementById('cercaAlimentoInput')?.value || '';
@@ -267,9 +289,9 @@ function toggleStatoAlimento(id) {
   const alimento = alimentiData.find(a => a.id === id);
   if (alimento) {
     alimento.attivo = alimento.attivo === false ? true : false;
-    
+
     // Salva in locale
-    localStorage.setItem('pwa_alimenti', JSON.stringify(alimentiData));
+    localStorage.setItem('nutriplan_alimenti', JSON.stringify(alimentiData));
 
     const filtroCorrente = document.getElementById('cercaAlimentoInput')?.value || '';
     renderListaAlimenti(alimentiData, filtroCorrente);

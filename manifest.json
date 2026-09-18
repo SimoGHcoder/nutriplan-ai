@@ -1,8 +1,8 @@
 // manifest.json
 
 {
-  "short_name": "NutriplanAI",
-  "name": "NutriplanAI",
+  "short_name": "NutriPlan AI",
+  "name": "NutriPlan AI",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/3059/3059997.png",
