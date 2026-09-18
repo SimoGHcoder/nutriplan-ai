@@ -1,8 +1,8 @@
 // manifest.json
 
 {
-  "short_name": "NutriPWA",
-  "name": "Nutrizionista PWA",
+  "short_name": "NutriplanAI",
+  "name": "NutriplanAI",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/3059/3059997.png",
