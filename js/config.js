@@ -1,3 +1,5 @@
+// js/config.js
+
 export function getConfigGH() {
   return JSON.parse(localStorage.getItem('configGH')) || { username: '', repo: '', token: '' };
 }
