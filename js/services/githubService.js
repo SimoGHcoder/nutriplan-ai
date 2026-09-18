@@ -1,7 +1,7 @@
 // js/services/githubService.js
 
 // Modifica qui il nome del tuo repository se dovesse essere diverso
-const REPO_NAME = "pwa-nutrizionista";
+const REPO_NAME = "nutripla-ai";
 
 export function getConfigGH() {
   return {
