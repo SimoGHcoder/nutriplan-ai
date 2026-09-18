@@ -1,3 +1,5 @@
+// js/modules/fabbisogno.js
+
 export function calcolaTargetNutrizionali(p) {
   if (!p.peso_kg || !p.altezza_cm || !p.eta) {
     return { targetKcal: 2000, targetProteine: 150, targetCarbo: 200, targetGrassi: 60 };
