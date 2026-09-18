@@ -1,3 +1,5 @@
+// js/modules/alimenti.js
+
 import { calcolaTargetNutrizionali } from './fabbisogno.js';
 
 export function generaStrutturaPiano(alimentiData, utenteData) {
