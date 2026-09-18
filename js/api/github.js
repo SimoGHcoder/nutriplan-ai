@@ -1,3 +1,5 @@
+// js/api/github.js
+
 import { getConfigGH } from '../config.js';
 
 export async function caricaFileDaGitHub(pathFile) {
